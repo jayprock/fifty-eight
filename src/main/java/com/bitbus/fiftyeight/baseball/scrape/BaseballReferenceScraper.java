@@ -27,14 +27,13 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 
 import com.bitbus.fiftyeight.FiftyEightApplication;
-import com.bitbus.fiftyeight.common.Sport;
-import com.bitbus.fiftyeight.common.game.Game;
+import com.bitbus.fiftyeight.baseball.game.BaseballGame;
+import com.bitbus.fiftyeight.baseball.game.BaseballGameService;
+import com.bitbus.fiftyeight.baseball.team.BaseballTeam;
+import com.bitbus.fiftyeight.baseball.team.BaseballTeamService;
 import com.bitbus.fiftyeight.common.game.GameLocation;
 import com.bitbus.fiftyeight.common.game.GameResult;
-import com.bitbus.fiftyeight.common.game.GameService;
 import com.bitbus.fiftyeight.common.scrape.ScrapeProperties;
-import com.bitbus.fiftyeight.common.team.Team;
-import com.bitbus.fiftyeight.common.team.TeamService;
 
 @SpringBootApplication
 @ComponentScan(basePackageClasses = FiftyEightApplication.class)
@@ -50,12 +49,12 @@ public class BaseballReferenceScraper {
     @Autowired
     private BaseballScrapeProperties baseballProperties;
     @Autowired
-    private TeamService teamService;
+    private BaseballTeamService teamService;
     @Autowired
-    private GameService gameService;
+    private BaseballGameService gameService;
 
     private Random random = new Random();
-    private Map<String, Team> teamNameMap = new HashMap<>();
+    private Map<String, BaseballTeam> teamNameMap = new HashMap<>();
 
     @PostConstruct
     private void init() {
@@ -63,10 +62,10 @@ public class BaseballReferenceScraper {
                 generalProperties.getChromeDriverLocation());
 
         LOGGER.debug("Getting all baseball teams.");
-        List<Team> baseballTeams = teamService.findBySport(Sport.BASEBALL);
+        List<BaseballTeam> baseballTeams = teamService.findAll();
         System.out.println(baseballTeams);
         LOGGER.debug("Storing teams in map by name.");
-        for (Team baseballTeam : baseballTeams) {
+        for (BaseballTeam baseballTeam : baseballTeams) {
             teamNameMap.put(baseballTeam.getFullName(), baseballTeam);
         }
     }
@@ -112,8 +111,8 @@ public class BaseballReferenceScraper {
                     throw new RuntimeException("Unexpected box score description format");
                 }
 
-                Team awayTeam = teamNameMap.get(descriptionComponents[0]);
-                Team homeTeam = teamNameMap.get(descriptionComponents[1]);
+                BaseballTeam awayTeam = teamNameMap.get(descriptionComponents[0]);
+                BaseballTeam homeTeam = teamNameMap.get(descriptionComponents[1]);
                 if (awayTeam == null || homeTeam == null) {
                     LOGGER.error("Could not map {} or {} to a persisted team.", descriptionComponents[0],
                             descriptionComponents[1]);
@@ -121,11 +120,11 @@ public class BaseballReferenceScraper {
                 }
 
                 // Create 2 games, one for each team
-                Game homeTeamGame = new Game();
+                BaseballGame homeTeamGame = new BaseballGame();
                 homeTeamGame.setTeam(homeTeam);
                 homeTeamGame.setOpponent(awayTeam);
 
-                Game awayTeamGame = new Game();
+                BaseballGame awayTeamGame = new BaseballGame();
                 awayTeamGame.setTeam(awayTeam);
                 awayTeamGame.setOpponent(homeTeam);
 
