@@ -1,11 +1,11 @@
-package com.bitbus.fiftyeight.baseball.game;
+package com.bitbus.fiftyeight.baseball.matchup;
 
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import com.bitbus.fiftyeight.baseball.team.BaseballTeam;
-import com.bitbus.fiftyeight.common.game.Game;
+import com.bitbus.fiftyeight.common.matchup.Matchup;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -17,13 +17,15 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class BaseballGame extends Game {
+public class BaseballMatchup extends Matchup {
 
     @ManyToOne
-    @JoinColumn(name = "team_id")
-    private BaseballTeam team;
+    @JoinColumn(name = "home_team_id")
+    private BaseballTeam homeTeam;
 
     @ManyToOne
-    @JoinColumn(name = "opponent_id")
-    private BaseballTeam opponent;
+    @JoinColumn(name = "away_team_id")
+    private BaseballTeam awayTeam;
+
+    private String baseballReferenceId;
 }
