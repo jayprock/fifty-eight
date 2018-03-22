@@ -3,13 +3,18 @@ package com.bitbus.fiftyeight.baseball.scrape;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.transaction.Transactional;
 
 import org.openqa.selenium.By;
@@ -30,8 +35,18 @@ import org.springframework.context.annotation.ComponentScan;
 import com.bitbus.fiftyeight.FiftyEightApplication;
 import com.bitbus.fiftyeight.baseball.matchup.BaseballMatchup;
 import com.bitbus.fiftyeight.baseball.matchup.BaseballMatchupService;
+import com.bitbus.fiftyeight.baseball.matchup.BaseballPlayerPosition;
+import com.bitbus.fiftyeight.baseball.player.BaseballPlayer;
+import com.bitbus.fiftyeight.baseball.player.BaseballPlayerService;
+import com.bitbus.fiftyeight.baseball.player.BaseballPosition;
+import com.bitbus.fiftyeight.baseball.player.BatterType;
+import com.bitbus.fiftyeight.baseball.starter.BaseballGameStarterService;
+import com.bitbus.fiftyeight.baseball.starter.BaseballPlayerStarterDTO;
 import com.bitbus.fiftyeight.baseball.team.BaseballTeam;
 import com.bitbus.fiftyeight.baseball.team.BaseballTeamService;
+import com.bitbus.fiftyeight.common.player.DominateHand;
+import com.bitbus.fiftyeight.common.player.HeightUnit;
+import com.bitbus.fiftyeight.common.player.WeightUnit;
 import com.bitbus.fiftyeight.common.scrape.ScrapeProperties;
 
 @SpringBootApplication
@@ -51,6 +66,10 @@ public class BaseballReferenceScraper {
     private BaseballTeamService teamService;
     @Autowired
     private BaseballMatchupService matchupService;
+    @Autowired
+    private BaseballPlayerService playerService;
+    @Autowired
+    private BaseballGameStarterService baseballGameStarterService;
 
     private WebDriver driver;
     private WebDriverWait wait;
@@ -92,7 +111,7 @@ public class BaseballReferenceScraper {
             List<WebElement> boxscoreLinks = dailyGameBlock.findElements(By.linkText("Boxscore"));
             for (WebElement boxscoreLink : boxscoreLinks) {
 
-                String matchupBaseballReferenceId = getBaseballReferenceIdForMatchup(boxscoreLink);
+                String matchupBaseballReferenceId = getBaseballReferenceId(boxscoreLink);
                 if (matchupService.matchupExistsForBaseballReferenceId(matchupBaseballReferenceId)) {
                     LOGGER.info("Matchup with ID {} has already been processed. Skipping.", matchupBaseballReferenceId);
                     continue;
@@ -108,12 +127,12 @@ public class BaseballReferenceScraper {
     private void processBoxScore(WebElement boxscoreLink, String mainTabHandle, String matchupBaseballReferenceId) {
         LOGGER.debug("Opening boxscore in a new tab, then scraping that page.");
         boxscoreLink.sendKeys(OPEN_LINK_IN_NEW_TAB);
-        String newTabHandle = driver.getWindowHandles() //
+        String boxscoreTabHandle = driver.getWindowHandles() //
                 .stream() //
                 .filter(handle -> !handle.equals(mainTabHandle)) //
                 .findFirst() //
                 .get();
-        driver.switchTo().window(newTabHandle);
+        driver.switchTo().window(boxscoreTabHandle);
         wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.className("top_inning")));
 
 
@@ -135,14 +154,13 @@ public class BaseballReferenceScraper {
             throw new RuntimeException("Unable to identify team.");
         }
 
-        createMatchup(homeTeam, awayTeam, descriptionComponents[2], matchupBaseballReferenceId);
+        BaseballMatchup matchup =
+                createMatchup(homeTeam, awayTeam, descriptionComponents[2], matchupBaseballReferenceId);
 
-        createPlayersInMatchup();
+        List<BaseballPlayerStarterDTO> startingPlayers = createOrFindStartingPlayers(mainTabHandle, boxscoreTabHandle);
 
-
-        // TODO - Get player data
-
-        // TODO - Get starting lineup
+        LOGGER.debug("Saving starters for this matchup");
+        baseballGameStarterService.save(startingPlayers, matchup);
 
         // TODO - Get game play-by-play
 
@@ -191,19 +209,103 @@ public class BaseballReferenceScraper {
 
     /**
      * Create the players in the matchup, if they do not already exist
+     * 
+     * @return Map of the players to the position and place in the batting order
      */
-    private void createPlayersInMatchup() {
+    private List<BaseballPlayerStarterDTO> createOrFindStartingPlayers(String mainTabHandle, String boxscoreTabHandle) {
+        List<BaseballPlayerStarterDTO> startingPlayerDTOs = new ArrayList<>();
+        List<WebElement> starterLinks = driver.findElements(By.xpath("//div[@id='div_lineups']//a"));
+        for (WebElement starterLink : starterLinks) {
+            BaseballPlayerStarterDTO startingPlayerDTO = new BaseballPlayerStarterDTO();
+            String playerBaseballReferenceId = getBaseballReferenceId(starterLink);
+            // TODO account for pitchers in the AL... no batting position
+            int battingOrderPosition =
+                    Integer.valueOf(starterLink.findElement(By.xpath("../preceding-sibling::td")).getText());
+            startingPlayerDTO.setBattingOrderPosition(battingOrderPosition);
+            BaseballPosition fieldingPosition = BaseballPosition
+                    .findByPositionId(starterLink.findElement(By.xpath("../following-sibling::td")).getText());
+            startingPlayerDTO.setFieldingPosition(fieldingPosition);
+            Optional<BaseballPlayer> playerOpt = playerService.findByBaseballReferenceId(playerBaseballReferenceId);
+            if (playerOpt.isPresent()) {
+                BaseballPlayer player = playerOpt.get();
+                List<BaseballPosition> knownPositions = player.getPlayerPositions()
+                        .stream()
+                        .map(baseballPlayerPosition -> baseballPlayerPosition.getPosition())
+                        .collect(Collectors.toList());
+                if (!knownPositions.contains(fieldingPosition)) {
+                    LOGGER.debug(
+                            "Player with ID {} already exists, but a new position ({}) was found. Adding the position only.",
+                            playerBaseballReferenceId, fieldingPosition.getPositionId());
+                    BaseballPlayerPosition playerPosition = new BaseballPlayerPosition();
+                    playerPosition.setPlayer(player);
+                    playerPosition.setPosition(fieldingPosition);
+                    player.getPlayerPositions().add(playerPosition);
+                } else {
+                    LOGGER.debug("Player already found with ID {}. Will not attempt to create.",
+                            playerBaseballReferenceId);
+                }
+                startingPlayerDTOs.add(startingPlayerDTO);
+                continue;
+            }
+            randomWaitTime();
+            LOGGER.debug("Need to get player data for {} with ID {}. Opening player page in a new tab.",
+                    starterLink.getText(), playerBaseballReferenceId);
+            starterLink.sendKeys(OPEN_LINK_IN_NEW_TAB);
+            String playerTabHandle = driver.getWindowHandles()
+                    .stream() //
+                    .filter(handleName -> !handleName.equals(mainTabHandle) && !handleName.equals(boxscoreTabHandle)) //
+                    .findFirst() //
+                    .get();
+            driver.switchTo().window(playerTabHandle);
+            wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.className("section_heading")));
 
-        List<WebElement> starters = driver.findElements(By.xpath("//div[@id='div_lineups']//a"));
-        for (WebElement starter : starters) {
+            BaseballPlayer player = new BaseballPlayer();
+            player.setBaseballReferenceId(playerBaseballReferenceId);
+            BaseballPlayerPosition playerPosition = new BaseballPlayerPosition();
+            playerPosition.setPlayer(player);
+            playerPosition.setPosition(fieldingPosition);
+            player.getPlayerPositions().add(playerPosition);
 
+
+            LOGGER.debug("Getting player metadata");
+            WebElement playerMetaElement = driver.findElement(By.id("meta"));
+            String fullName = playerMetaElement.findElement(By.tagName("h1")).getText();
+            String[] names = fullName.split("\\s");
+            player.setFirstName(names[0]);
+            player.setLastName(names[names.length - 1]);
+            if (names.length > 2) {
+                String[] ambiguousNames = Arrays.copyOfRange(names, 1, names.length - 1);
+                player.setAmbiguousName(String.join(" ", ambiguousNames));
+            }
+            List<WebElement> metaBlocks = playerMetaElement.findElements(By.tagName("p"));
+            for (WebElement metaBlock : metaBlocks) {
+                String label = metaBlock.findElement(By.tagName("strong")).getText().trim();
+                if (label.equals("Bats:")) {
+                    String[] metaComponents = metaBlock.getText().split("\\s");
+                    player.setBatsFrom(BatterType.findByLookupName(metaComponents[1]));
+                    player.setThrowsFrom(DominateHand.findByLookupName(metaComponents[6]));
+                    String size = metaBlock.findElement(By.xpath("following-sibling::p")).getText();
+                    String[] sizeElements = size.split("-|,\\s|lb");
+                    int heightInches = Integer.valueOf(sizeElements[0]) * 12 + Integer.valueOf(sizeElements[1]);
+                    player.setHeight(heightInches);
+                    player.setHeightUnit(HeightUnit.IN);
+                    player.setWeight(Double.valueOf(sizeElements[2]));
+                    player.setWeightUnit(WeightUnit.LB);
+                    break;
+                }
+            }
+            playerService.save(player);
+            startingPlayerDTO.setPlayer(player);
+            startingPlayerDTOs.add(startingPlayerDTO);
+            driver.close();
+            driver.switchTo().window(boxscoreTabHandle);
         }
-
+        return startingPlayerDTOs;
     }
 
-    private String getBaseballReferenceIdForMatchup(WebElement boxscoreLink) {
-        String[] boxscoreLinkComponents = boxscoreLink.getAttribute("href").split("\\/|\\.");
-        return boxscoreLinkComponents[boxscoreLinkComponents.length - 2];
+    private String getBaseballReferenceId(WebElement baseballReferenceLink) {
+        String[] linkComponents = baseballReferenceLink.getAttribute("href").split("\\/|\\.");
+        return linkComponents[linkComponents.length - 2];
     }
 
     /**
@@ -223,6 +325,12 @@ public class BaseballReferenceScraper {
         ConfigurableApplicationContext ctx = SpringApplication.run(BaseballReferenceScraper.class, args);
         BaseballReferenceScraper baseballReferenceScrape = ctx.getBean(BaseballReferenceScraper.class);
         baseballReferenceScrape.performScrape();
+    }
+
+
+    @PreDestroy
+    private void destroy() {
+        driver.quit();
     }
 
 }
