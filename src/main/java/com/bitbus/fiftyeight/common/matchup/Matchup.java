@@ -14,7 +14,7 @@ import lombok.Data;
 public abstract class Matchup {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int matchupId;
 
     private LocalDateTime gameDateTime;

@@ -15,7 +15,7 @@ import lombok.Data;
 public class Player {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int playerId;
     private String firstName;
     private String lastName;

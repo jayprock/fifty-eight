@@ -20,7 +20,7 @@ public class BaseballGameStarterServiceImpl implements BaseballGameStarterServic
                 .map(dto -> new BaseballGameStarter(matchup, dto.getPlayer(), dto.getFieldingPosition(),
                         dto.getBattingOrderPosition()))
                 .collect(Collectors.toList());
-        return baseballGameStarterRepo.save(baseballGameStarters);
+        return baseballGameStarterRepo.saveAll(baseballGameStarters);
     }
 
 }

@@ -27,7 +27,7 @@ import lombok.ToString;
 public class BaseballPlayerPosition {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int playerPositionId;
 
     @Enumerated(EnumType.STRING)
