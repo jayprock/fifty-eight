@@ -157,10 +157,9 @@ public class BaseballReferenceScraper {
         BaseballMatchup matchup =
                 createMatchup(homeTeam, awayTeam, descriptionComponents[2], matchupBaseballReferenceId);
 
-        List<BaseballPlayerStarterDTO> startingPlayers = createOrFindStartingPlayers(mainTabHandle, boxscoreTabHandle);
+        List<BaseballPlayer> playersInMatchup = createPlayers(matchup, mainTabHandle, boxscoreTabHandle);
 
-        LOGGER.debug("Saving starters for this matchup");
-        baseballGameStarterService.save(startingPlayers, matchup);
+        createStarters(playersInMatchup, matchup);
 
         // TODO - Get game play-by-play
 
@@ -207,50 +206,64 @@ public class BaseballReferenceScraper {
         return matchupService.save(matchup);
     }
 
-    /**
-     * Create the players in the matchup, if they do not already exist
-     * 
-     * @return Map of the players to the position and place in the batting order
-     */
-    private List<BaseballPlayerStarterDTO> createOrFindStartingPlayers(String mainTabHandle, String boxscoreTabHandle) {
-        List<BaseballPlayerStarterDTO> startingPlayerDTOs = new ArrayList<>();
-        List<WebElement> starterLinks = driver.findElements(By.xpath("//div[@id='div_lineups']//a"));
-        for (WebElement starterLink : starterLinks) {
-            BaseballPlayerStarterDTO startingPlayerDTO = new BaseballPlayerStarterDTO();
-            String playerBaseballReferenceId = getBaseballReferenceId(starterLink);
-            // TODO account for pitchers in the AL... no batting position
-            int battingOrderPosition =
-                    Integer.valueOf(starterLink.findElement(By.xpath("../preceding-sibling::td")).getText());
-            startingPlayerDTO.setBattingOrderPosition(battingOrderPosition);
-            BaseballPosition fieldingPosition = BaseballPosition
-                    .findByPositionId(starterLink.findElement(By.xpath("../following-sibling::td")).getText());
-            startingPlayerDTO.setFieldingPosition(fieldingPosition);
+    private List<BaseballPlayer> createPlayers(BaseballMatchup matchup, String mainTabHandle,
+            String boxscoreTabHandle) {
+        List<BaseballPlayer> players = new ArrayList<>();
+
+        LOGGER.debug("Attempting to create away team players.");
+        List<BaseballPlayer> awayTeamPlayers =
+                createPlayersForTeam(matchup.getAwayTeam(), mainTabHandle, boxscoreTabHandle);
+        players.addAll(awayTeamPlayers);
+
+        LOGGER.debug("Attempting to create home team players.");
+        List<BaseballPlayer> homeTeamPlayers =
+                createPlayersForTeam(matchup.getHomeTeam(), mainTabHandle, boxscoreTabHandle);
+        players.addAll(homeTeamPlayers);
+
+        return players;
+    }
+
+    private List<BaseballPlayer> createPlayersForTeam(BaseballTeam team, String mainTabHandle,
+            String boxscoreTabHandle) {
+        List<BaseballPlayer> players = new ArrayList<>();
+        String teamBattingTableId = team.getFullName().replaceAll("\\s|\\.", "") + "batting";
+        List<WebElement> playerLinks = driver.findElement(By.id(teamBattingTableId)).findElements(By.tagName("a"));
+        for (WebElement playerLink : playerLinks) {
+            String[] playerTextComponents = playerLink.findElement(By.xpath("..")).getText().split("\\s");
+            List<BaseballPosition> positions =
+                    Arrays.asList(playerTextComponents[playerTextComponents.length - 1].split("-")) //
+                            .stream() //
+                            .filter(positionText -> !positionText.equals("PH"))
+                            .filter(positionText -> !positionText.equals("PR"))
+                            .map(positionText -> BaseballPosition.findByPositionId(positionText))
+                            .collect(Collectors.toList());
+            String playerBaseballReferenceId = getBaseballReferenceId(playerLink);
             Optional<BaseballPlayer> playerOpt = playerService.findByBaseballReferenceId(playerBaseballReferenceId);
             if (playerOpt.isPresent()) {
                 BaseballPlayer player = playerOpt.get();
-                List<BaseballPosition> knownPositions = player.getPlayerPositions()
-                        .stream()
-                        .map(baseballPlayerPosition -> baseballPlayerPosition.getPosition())
+                List<BaseballPosition> existingPositions = player.getPlayerPositions() //
+                        .stream() //
+                        .map(position -> position.getPosition()) //
                         .collect(Collectors.toList());
-                if (!knownPositions.contains(fieldingPosition)) {
+                List<BaseballPlayerPosition> newPositions = positions.stream() //
+                        .filter(position -> !existingPositions.contains(position)) //
+                        .map(position -> new BaseballPlayerPosition(position, playerOpt.get()))
+                        .collect(Collectors.toList());
+                if (newPositions.size() > 0) {
                     LOGGER.debug(
-                            "Player with ID {} already exists, but a new position ({}) was found. Adding the position only.",
-                            playerBaseballReferenceId, fieldingPosition.getPositionId());
-                    BaseballPlayerPosition playerPosition = new BaseballPlayerPosition();
-                    playerPosition.setPlayer(player);
-                    playerPosition.setPosition(fieldingPosition);
-                    player.getPlayerPositions().add(playerPosition);
+                            "Player already found with ID {} but new position(s) exist. Only creating these positions: {}",
+                            playerBaseballReferenceId, newPositions);
+                    player.getPlayerPositions().addAll(newPositions);
                 } else {
                     LOGGER.debug("Player already found with ID {}. Will not attempt to create.",
                             playerBaseballReferenceId);
                 }
-                startingPlayerDTOs.add(startingPlayerDTO);
                 continue;
             }
             randomWaitTime();
             LOGGER.debug("Need to get player data for {} with ID {}. Opening player page in a new tab.",
-                    starterLink.getText(), playerBaseballReferenceId);
-            starterLink.sendKeys(OPEN_LINK_IN_NEW_TAB);
+                    playerLink.getText(), playerBaseballReferenceId);
+            playerLink.sendKeys(OPEN_LINK_IN_NEW_TAB);
             String playerTabHandle = driver.getWindowHandles()
                     .stream() //
                     .filter(handleName -> !handleName.equals(mainTabHandle) && !handleName.equals(boxscoreTabHandle)) //
@@ -261,11 +274,10 @@ public class BaseballReferenceScraper {
 
             BaseballPlayer player = new BaseballPlayer();
             player.setBaseballReferenceId(playerBaseballReferenceId);
-            BaseballPlayerPosition playerPosition = new BaseballPlayerPosition();
-            playerPosition.setPlayer(player);
-            playerPosition.setPosition(fieldingPosition);
-            player.getPlayerPositions().add(playerPosition);
-
+            List<BaseballPlayerPosition> playerPositions = positions.stream() //
+                    .map(position -> new BaseballPlayerPosition(position, player)) //
+                    .collect(Collectors.toList());
+            player.getPlayerPositions().addAll(playerPositions);
 
             LOGGER.debug("Getting player metadata");
             WebElement playerMetaElement = driver.findElement(By.id("meta"));
@@ -295,12 +307,39 @@ public class BaseballReferenceScraper {
                 }
             }
             playerService.save(player);
-            startingPlayerDTO.setPlayer(player);
-            startingPlayerDTOs.add(startingPlayerDTO);
+            players.add(player);
             driver.close();
             driver.switchTo().window(boxscoreTabHandle);
         }
-        return startingPlayerDTOs;
+        return players;
+    }
+
+    private void createStarters(List<BaseballPlayer> players, BaseballMatchup matchup) {
+        List<BaseballPlayerStarterDTO> startingPlayerDTOs = new ArrayList<>();
+        List<WebElement> starterLinks = driver.findElements(By.xpath("//div[@id='div_lineups']//a"));
+        for (WebElement starterLink : starterLinks) {
+            BaseballPlayerStarterDTO startingPlayerDTO = new BaseballPlayerStarterDTO();
+            Integer battingOrderPosition;
+            try {
+                battingOrderPosition =
+                        Integer.parseInt(starterLink.findElement(By.xpath("../preceding-sibling::td")).getText());
+            } catch (NumberFormatException e) {
+                battingOrderPosition = null;
+            }
+            startingPlayerDTO.setBattingOrderPosition(battingOrderPosition);
+            BaseballPosition fieldingPosition = BaseballPosition
+                    .findByPositionId(starterLink.findElement(By.xpath("../following-sibling::td")).getText());
+            startingPlayerDTO.setFieldingPosition(fieldingPosition);
+            String playerBaseballReferenceId = getBaseballReferenceId(starterLink);
+            BaseballPlayer startingPlayer = players.stream() //
+                    .filter(player -> player.getBaseballReferenceId().equals(playerBaseballReferenceId)) //
+                    .findFirst() //
+                    .get();
+            startingPlayerDTO.setPlayer(startingPlayer);
+            startingPlayerDTOs.add(startingPlayerDTO);
+        }
+        LOGGER.debug("Saving game starters");
+        baseballGameStarterService.save(startingPlayerDTOs, matchup);
     }
 
     private String getBaseballReferenceId(WebElement baseballReferenceLink) {

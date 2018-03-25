@@ -14,6 +14,7 @@ import com.bitbus.fiftyeight.baseball.player.BaseballPosition;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -22,6 +23,7 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode(exclude = "player")
 @ToString(exclude = "player")
+@NoArgsConstructor
 public class BaseballPlayerPosition {
 
     @Id
@@ -35,5 +37,9 @@ public class BaseballPlayerPosition {
     @JoinColumn(name = "player_id")
     private BaseballPlayer player;
 
+    public BaseballPlayerPosition(BaseballPosition position, BaseballPlayer player) {
+        this.position = position;
+        this.player = player;
+    }
 
 }

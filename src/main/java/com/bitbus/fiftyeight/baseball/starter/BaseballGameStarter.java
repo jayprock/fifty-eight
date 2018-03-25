@@ -42,10 +42,10 @@ public class BaseballGameStarter {
     @JoinColumn(name = "player_id")
     private BaseballPlayer player;
 
-    private int battingPosition;
+    private Integer battingPosition;
 
     public BaseballGameStarter(BaseballMatchup matchup, BaseballPlayer player, BaseballPosition position,
-            int battingPosition) {
+            Integer battingPosition) {
         this.matchup = matchup;
         this.player = player;
         this.position = position;

@@ -10,6 +10,6 @@ public class BaseballPlayerStarterDTO {
 
     private BaseballPlayer player;
     private BaseballPosition fieldingPosition;
-    private int battingOrderPosition;
+    private Integer battingOrderPosition;
 
 }
