@@ -22,4 +22,13 @@ public class ScrapeSleeper {
         }
     }
 
+    public static void sleep(long millis) {
+        try {
+            log.debug("Sleeping for {} millis", millis);
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

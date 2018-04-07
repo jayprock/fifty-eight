@@ -1,4 +1,4 @@
-package com.bitbus.fiftyeight.baseball.scrape;
+package com.bitbus.fiftyeight.baseball.scrape.baseballreference;
 
 import java.util.List;
 

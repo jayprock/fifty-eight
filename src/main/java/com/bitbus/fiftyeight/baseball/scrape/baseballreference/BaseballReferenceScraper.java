@@ -1,4 +1,7 @@
-package com.bitbus.fiftyeight.baseball.scrape;
+package com.bitbus.fiftyeight.baseball.scrape.baseballreference;
+
+import static com.bitbus.fiftyeight.common.scrape.ScrapeSleeper.randomSleep;
+import static com.bitbus.fiftyeight.common.scrape.ScrapeSleeper.sleep;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -10,7 +13,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -19,6 +21,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +35,10 @@ import com.bitbus.fiftyeight.baseball.player.BaseballPlayer;
 import com.bitbus.fiftyeight.baseball.player.BaseballPlayerService;
 import com.bitbus.fiftyeight.baseball.player.BaseballPosition;
 import com.bitbus.fiftyeight.baseball.player.BatterType;
+import com.bitbus.fiftyeight.baseball.player.plateappearance.InningType;
+import com.bitbus.fiftyeight.baseball.player.plateappearance.PitchResult;
+import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearance;
+import com.bitbus.fiftyeight.baseball.player.plateappearance.RunnersOnBase;
 import com.bitbus.fiftyeight.baseball.starter.BaseballGameStarterService;
 import com.bitbus.fiftyeight.baseball.starter.BaseballPlayerStarterDTO;
 import com.bitbus.fiftyeight.baseball.team.BaseballTeam;
@@ -54,6 +61,8 @@ public class BaseballReferenceScraper {
     @Autowired
     private WebDriverWait wait;
     @Autowired
+    private Actions actions;
+    @Autowired
     private BaseballScrapeProperties baseballProperties;
     @Autowired
     private BaseballTeamService teamService;
@@ -64,7 +73,6 @@ public class BaseballReferenceScraper {
     @Autowired
     private BaseballGameStarterService baseballGameStarterService;
 
-    private Random random = new Random();
     private Map<String, BaseballTeam> teamNameMap = new HashMap<>();
 
     @PostConstruct
@@ -121,7 +129,6 @@ public class BaseballReferenceScraper {
                     "The Box Score description could not be parsed as expected.  Any scraping could lead to unexpected results.");
             throw new RuntimeException("Unexpected box score description format");
         }
-
         BaseballTeam awayTeam = teamNameMap.get(descriptionComponents[0]);
         BaseballTeam homeTeam = teamNameMap.get(descriptionComponents[1]);
         if (awayTeam == null || homeTeam == null) {
@@ -129,6 +136,7 @@ public class BaseballReferenceScraper {
                     descriptionComponents[1]);
             throw new RuntimeException("Unable to identify team.");
         }
+        createPlateAppearances(null);
 
         BaseballMatchup matchup =
                 createMatchup(homeTeam, awayTeam, descriptionComponents[2], matchupBaseballReferenceId);
@@ -140,7 +148,7 @@ public class BaseballReferenceScraper {
         // TODO - Get game play-by-play
 
         log.debug("Done scraping game data, closing tab.");
-        randomWaitTime();
+        randomSleep();
         driver.close();
         driver.switchTo().window(mainTabHandle);
     }
@@ -236,7 +244,7 @@ public class BaseballReferenceScraper {
                 }
                 continue;
             }
-            randomWaitTime();
+            randomSleep();
             log.debug("Need to get player data for {} with ID {}. Opening player page in a new tab.",
                     playerLink.getText(), playerBaseballReferenceId);
             playerLink.sendKeys(OPEN_LINK_IN_NEW_TAB);
@@ -318,23 +326,89 @@ public class BaseballReferenceScraper {
         baseballGameStarterService.save(startingPlayerDTOs, matchup);
     }
 
+    private void createPlateAppearances(List<BaseballPlayer> players) {
+        log.debug("Processing the matchup play by play data");
+        WebElement viewPitchesButton = driver.findElement(By.xpath("//span[text()='View Pitches']/.."));
+        actions.moveToElement(viewPitchesButton).perform();
+        sleep(500);
+        viewPitchesButton.click();
+        List<WebElement> plateAppearanceRows = driver.findElements(By.xpath(
+                "//table[@id='play_by_play']/descendant::tr[contains(@class,'top_inning') or contains(@class,'bottom_inning')]"));
+        for (WebElement plateAppearanceRow : plateAppearanceRows) {
+            createPlateAppearance(plateAppearanceRow, players);
+        }
+
+    }
+
+    private void createPlateAppearance(WebElement plateAppearanceRow, List<BaseballPlayer> players) {
+        PlateAppearance plateAppearance = new PlateAppearance();
+        log.trace("Getting the inning data");
+        String inningText = plateAppearanceRow.findElement(By.tagName("th")).getText();
+        plateAppearance.setInning(Character.getNumericValue(inningText.charAt(1)));
+        plateAppearance.setInningType(InningType.findByLookupId(inningText.charAt(0)));
+
+        log.trace("Getting all other table columns for this plate appearance");
+        List<WebElement> columns = plateAppearanceRow.findElements(By.tagName("td"));
+
+        log.trace("Attempting to parse the outs total");
+        plateAppearance.setOutsExisting(Integer.parseInt(columns.get(1).getText()));
+
+        log.trace("Determining the runners on base");
+        plateAppearance.setRunnersOnBase(RunnersOnBase.findByCode(columns.get(2).getText()));
+
+        log.trace("Parsing pitch count");
+        String pitchCountDetails = columns.get(3).getText();
+        plateAppearance.setPitchTotal(Integer.parseInt(pitchCountDetails.split(",")[0]));
+
+        log.trace("Determining the entire pitch sequence");
+        String pitchSequenceCode = pitchCountDetails.split("\\s")[1] //
+                .replaceAll("V", "B") //
+                .replaceAll("Y", "X") //
+                .replaceAll("\\*|>|\\+|\\.|[123]", "");
+        if (pitchSequenceCode.length() != plateAppearance.getPitchTotal()) {
+            throw new RuntimeException(
+                    "Inconsistent pitch information found in row with text: " + plateAppearanceRow.getText());
+        }
+        List<PitchResult> pitchResults = pitchSequenceCode.chars() //
+                .mapToObj(c -> new PitchResult((char) c, plateAppearance)) //
+                .collect(Collectors.toList());
+        plateAppearance.setPitchResults(pitchResults);
+
+        log.trace("Get the resulting outs and runs scored from the plate appearance");
+        String runsScoredOutsMadeCode = columns.get(4).getText();
+        int outsResult = runsScoredOutsMadeCode.replaceAll("R", "").length();
+        plateAppearance.setOutsResult(outsResult);
+        int runsResult = runsScoredOutsMadeCode.replaceAll("O", "").length();
+        plateAppearance.setRunsResult(runsResult);
+
+        log.trace("Assessing the batter");
+        String batterName = columns.get(6).getText();
+        BaseballPlayer batter = players.stream() //
+                .filter(player -> player.getFullName().equals(batterName)) //
+                .findFirst() //
+                .get();
+        plateAppearance.setBatter(batter);
+
+        log.trace("Assessing the pitcher");
+        String pitcherName = columns.get(7).getText();
+        BaseballPlayer pitcher = players.stream() //
+                .filter(player -> player.getFullName().equals(pitcherName)) //
+                .findFirst() //
+                .get();
+        plateAppearance.setPitcher(pitcher);
+
+        // TODO - handle stolen base scenario (2 rows) -- When assessing the result, just skip if a
+        // stolen base
+        // TODO - assess if atBat
+        // TODO - calculate RBIs
+        // TODO - how to differentiate between: sacrifice, fielders choice, out, double play, etc
+
+    }
+
+
     public String getBaseballReferenceId(WebElement baseballReferenceLink) {
         String[] linkComponents = baseballReferenceLink.getAttribute("href").split("\\/|\\.");
         return linkComponents[linkComponents.length - 2];
     }
-
-    /**
-     * @return random wait time between 1 and 5 seconds
-     */
-    private void randomWaitTime() {
-        try {
-            int waitMillis = 1000 + random.nextInt(2000);
-            log.debug("Adding random wait time of {} millis", waitMillis);
-            Thread.sleep(waitMillis);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 
 }

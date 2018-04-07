@@ -1,4 +1,4 @@
-package com.bitbus.fiftyeight.baseball.scrape;
+package com.bitbus.fiftyeight.baseball.scrape.baseballreference;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
