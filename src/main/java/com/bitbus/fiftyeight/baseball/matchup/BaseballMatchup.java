@@ -12,6 +12,7 @@ import javax.persistence.OneToMany;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
+import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearance;
 import com.bitbus.fiftyeight.baseball.starter.BaseballGameStarter;
 import com.bitbus.fiftyeight.baseball.team.BaseballTeam;
 import com.bitbus.fiftyeight.common.matchup.Matchup;
@@ -24,8 +25,8 @@ import lombok.ToString;
 @Entity
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = true, exclude = {"starters"})
-@ToString(callSuper = true, exclude = {"starters"})
+@EqualsAndHashCode(callSuper = true, exclude = {"starters", "plateAppearances"})
+@ToString(callSuper = true, exclude = {"starters", "plateAppearances"})
 public class BaseballMatchup extends Matchup {
 
     private String baseballReferenceId;
@@ -41,5 +42,9 @@ public class BaseballMatchup extends Matchup {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "matchup")
     @Fetch(FetchMode.SUBSELECT)
     private List<BaseballGameStarter> starters;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "matchup")
+    @Fetch(FetchMode.SUBSELECT)
+    private List<PlateAppearance> plateAppearances;
 
 }
