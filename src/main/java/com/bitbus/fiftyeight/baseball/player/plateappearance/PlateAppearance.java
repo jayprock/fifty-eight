@@ -61,12 +61,17 @@ public class PlateAppearance {
     private boolean resultsInHit;
     private int basesEventuallyStolen;
     private boolean runEventuallyScored;
+    private boolean qualifiedAtBat;
+    private int runsBattedIn;
 
     @Enumerated(EnumType.STRING)
     private PlateAppearanceResult resultType;
 
     @Enumerated(EnumType.STRING)
-    private PlateAppearanceResultDetail resultDetail;
+    private HitType hitType;
+
+    @Enumerated(EnumType.STRING)
+    private HitLocation hitLocation;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "plateAppearance")
     private List<PitchResult> pitchResults;
