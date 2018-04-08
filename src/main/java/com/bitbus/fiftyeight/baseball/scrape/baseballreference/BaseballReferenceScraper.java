@@ -38,7 +38,9 @@ import com.bitbus.fiftyeight.baseball.player.BatterType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.InningType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PitchResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearance;
+import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.RunnersOnBase;
+import com.bitbus.fiftyeight.baseball.scrape.baseballreference.parser.PlateAppearanceResultParser;
 import com.bitbus.fiftyeight.baseball.starter.BaseballGameStarterService;
 import com.bitbus.fiftyeight.baseball.starter.BaseballPlayerStarterDTO;
 import com.bitbus.fiftyeight.baseball.team.BaseballTeam;
@@ -72,6 +74,8 @@ public class BaseballReferenceScraper {
     private BaseballPlayerService playerService;
     @Autowired
     private BaseballGameStarterService baseballGameStarterService;
+    @Autowired
+    private List<PlateAppearanceResultParser> plateAppearanceResultParsers;
 
     private Map<String, BaseballTeam> teamNameMap = new HashMap<>();
 
@@ -397,12 +401,25 @@ public class BaseballReferenceScraper {
                 .get();
         plateAppearance.setPitcher(pitcher);
 
+        log.trace("Looking up a parser for the plate appearance description");
+        String plateAppearanceDescription = columns.get(10).getText();
+        PlateAppearanceResultParser resultParser = plateAppearanceResultParsers.stream() //
+                .filter(parser -> parser.isParserFor(plateAppearanceDescription)) //
+                .findFirst() //
+                .orElseThrow(() -> new RuntimeException(
+                        "Could not find a parser for plate appearance description: " + plateAppearanceDescription));
+        log.trace("Found parser [{}] for plate appearance description [{}]", resultParser.getClass().getName(),
+                plateAppearanceDescription);
+        PlateAppearanceResultDTO resultDTO = resultParser.parse(plateAppearanceDescription);
+        plateAppearance.setResultType(resultDTO.getResult());
+        plateAppearance.setQualifiedAtBat(resultDTO.isQualifiedAtBat());
+        plateAppearance.setResultsInHit(resultDTO.isHit());
+        plateAppearance.setHitType(resultDTO.getHitType());
+        plateAppearance.setHitLocation(resultDTO.getHitLocation());
+        plateAppearance.setRunsBattedIn(resultDTO.getRunsBattedIn());
         // TODO - handle stolen base scenario (2 rows) -- When assessing the result, just skip if a
         // stolen base
-        // TODO - assess if atBat
-        // TODO - calculate RBIs
-        // TODO - how to differentiate between: sacrifice, fielders choice, out, double play, etc
-
+        // TODO - track post-hit activities (e.g. did the runner score, stolen bases, etc)
     }
 
 
