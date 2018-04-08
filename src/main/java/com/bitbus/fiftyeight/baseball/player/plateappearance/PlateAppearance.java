@@ -63,6 +63,7 @@ public class PlateAppearance {
     private boolean runEventuallyScored;
     private boolean qualifiedAtBat;
     private int runsBattedIn;
+    private boolean ballHitInPlay;
 
     @Enumerated(EnumType.STRING)
     private PlateAppearanceResult resultType;

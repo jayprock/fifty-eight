@@ -77,6 +77,7 @@ public class HitResultParser implements PlateAppearanceResultParser {
         return PlateAppearanceResultDTO.builder(result) //
                 .hit(true) //
                 .qualifiedAtBat(true) //
+                .ballHitInPlay(true) //
                 .hitType(hitType) //
                 .hitLocation(hitLocation) //
                 .runsBattedIn(runsBattedIn) //

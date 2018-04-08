@@ -42,6 +42,7 @@ public class HitResultParserTest {
         PlateAppearanceResultDTO dto = parser.parse("Single to LF (Ground Ball)");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
         assertEquals(PlateAppearanceResult.SINGLE, dto.getResult());
         assertEquals(HitType.GROUND_BALL, dto.getHitType());
         assertEquals(HitLocation.LEFT_FIELD, dto.getHitLocation());
@@ -50,6 +51,7 @@ public class HitResultParserTest {
         dto = parser.parse("Single to CF (Ground Ball thru SS-2B); Owings Scores; Goldschmidt Scores");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
         assertEquals(PlateAppearanceResult.SINGLE, dto.getResult());
         assertEquals(HitType.GROUND_BALL, dto.getHitType());
         assertEquals(HitLocation.SHORT_STOP_SECOND_BASE, dto.getHitLocation());
@@ -58,6 +60,7 @@ public class HitResultParserTest {
         dto = parser.parse("Single to LF (Line Drive to Short LF)");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
         assertEquals(PlateAppearanceResult.SINGLE, dto.getResult());
         assertEquals(HitType.LINE_DRIVE, dto.getHitType());
         assertEquals(HitLocation.SHORT_LEFT_FIELD, dto.getHitLocation());
@@ -69,6 +72,7 @@ public class HitResultParserTest {
         PlateAppearanceResultDTO dto = parser.parse("Double to RF (Fly Ball to Deep CF-RF)");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
         assertEquals(PlateAppearanceResult.DOUBLE, dto.getResult());
         assertEquals(HitType.FLYBALL, dto.getHitType());
         assertEquals(HitLocation.DEEP_CENTER_FIELD_RIGHT_FIELD, dto.getHitLocation());
@@ -77,6 +81,7 @@ public class HitResultParserTest {
         dto = parser.parse("Double to RF (Line Drive to RF Line)");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
         assertEquals(PlateAppearanceResult.DOUBLE, dto.getResult());
         assertEquals(HitType.LINE_DRIVE, dto.getHitType());
         assertEquals(HitLocation.RIGHT_FIELD_LINE, dto.getHitLocation());
@@ -85,6 +90,7 @@ public class HitResultParserTest {
         dto = parser.parse("Double to LF (Line Drive); Owings Scores; Goldschmidt Scores; Lamb to 3B");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
         assertEquals(PlateAppearanceResult.DOUBLE, dto.getResult());
         assertEquals(HitType.LINE_DRIVE, dto.getHitType());
         assertEquals(HitLocation.LEFT_FIELD, dto.getHitLocation());
@@ -97,6 +103,7 @@ public class HitResultParserTest {
                 parser.parse("Triple to RF (Ground Ball); Flores Scores; Bruce Scores; Walker Scores");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
         assertEquals(PlateAppearanceResult.TRIPLE, dto.getResult());
         assertEquals(HitType.GROUND_BALL, dto.getHitType());
         assertEquals(HitLocation.RIGHT_FIELD, dto.getHitLocation());
@@ -108,6 +115,7 @@ public class HitResultParserTest {
         PlateAppearanceResultDTO dto = parser.parse("Home Run (Fly Ball to Deep CF); Pederson Scores");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
         assertEquals(PlateAppearanceResult.HOMERUN, dto.getResult());
         assertEquals(HitType.FLYBALL, dto.getHitType());
         assertEquals(HitLocation.DEEP_CENTER_FIELD, dto.getHitLocation());
@@ -116,6 +124,7 @@ public class HitResultParserTest {
         dto = parser.parse("Home Run (Line Drive to Deep LF Line); Ellis Scores; Yelich Scores; Stanton Scores");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
         assertEquals(PlateAppearanceResult.HOMERUN, dto.getResult());
         assertEquals(HitType.LINE_DRIVE, dto.getHitType());
         assertEquals(HitLocation.DEEP_LEFT_FIELD_LINE, dto.getHitLocation());
@@ -124,6 +133,7 @@ public class HitResultParserTest {
         dto = parser.parse("Home Run (Fly Ball to Deep LF)");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
         assertEquals(PlateAppearanceResult.HOMERUN, dto.getResult());
         assertEquals(HitType.FLYBALL, dto.getHitType());
         assertEquals(HitLocation.DEEP_LEFT_FIELD, dto.getHitLocation());
@@ -135,6 +145,7 @@ public class HitResultParserTest {
         PlateAppearanceResultDTO dto = parser.parse("Ground-rule Double (Line Drive to Deep CF)");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
         assertEquals(PlateAppearanceResult.DOUBLE, dto.getResult());
         assertEquals(HitType.LINE_DRIVE, dto.getHitType());
         assertEquals(HitLocation.DEEP_CENTER_FIELD, dto.getHitLocation());
