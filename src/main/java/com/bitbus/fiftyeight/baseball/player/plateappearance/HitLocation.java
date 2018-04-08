@@ -19,6 +19,7 @@ public enum HitLocation {
     DEEP_THIRD_BASE("Deep 3B", false),
     PITCHER("P", false),
     SHORT_LEFT_FIELD_LINE("Short LF Line", true),
+    LEFT_FIELD_FOUL_TERRITORY("LF into Foul Terr.", true),
     LEFT_FIELD_LINE("LF Line", true),
     DEEP_LEFT_FIELD_LINE("Deep LF Line", true),
     SHORT_LEFT_FIELD("Short LF", true),
@@ -37,7 +38,8 @@ public enum HitLocation {
     RIGHT_FIELD("RF", true),
     SHORT_RIGHT_FIELD_LINE("Short RF Line", true),
     RIGHT_FIELD_LINE("RF Line", true),
-    DEEP_RIGHT_FIELD_LINE("Deep RF Line", true);
+    DEEP_RIGHT_FIELD_LINE("Deep RF Line", true),
+    RIGHT_FIELD_FOUL_TERRITORY("RF into Foul Terr.", true);
 
     private String displayName;
     private boolean outfield;

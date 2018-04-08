@@ -14,5 +14,6 @@ public enum PlateAppearanceResult {
     GROUNDOUT,
     LINEOUT,
     FLYOUT,
+    SAC_FLY,
     REACH_ON_ERROR;
 }

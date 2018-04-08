@@ -63,6 +63,8 @@ public class PlateAppearance {
     private boolean runEventuallyScored;
     private boolean qualifiedAtBat;
     private int runsBattedIn;
+
+    // The stat "Balls In Play" sometimes does not consider homeruns, this does
     private boolean ballHitInPlay;
 
     @Enumerated(EnumType.STRING)
