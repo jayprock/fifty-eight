@@ -13,7 +13,7 @@ public enum HitLocation {
     DEEP_SHORT_STOP_SECOND_BASE("Deep SS-2B", false),
     SHORT_STOP("SS", false),
     DEEP_SHORT_STOP("Deep SS", false),
-    THIRD_BASE_SHORT_STOP("3B-SS", false),
+    THIRD_BASE_SHORT_STOP("SS-3B", false),
     DEEP_THIRD_BASE_SHORT_STOP("Deep 3B-SS", false),
     THIRD_BASE("3B", false),
     DEEP_THIRD_BASE("Deep 3B", false),
