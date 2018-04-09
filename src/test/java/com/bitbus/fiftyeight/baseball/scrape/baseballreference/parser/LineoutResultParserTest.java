@@ -42,7 +42,7 @@ public class LineoutResultParserTest {
     @Test
     public void testParse() {
         PlateAppearanceResultDTO dto = parser.parse("Lineout: SS");
-        assertEquals(PlateAppearanceResult.LINEOUT, dto.getResult());
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
         assertFalse(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
         assertTrue(dto.isBallHitInPlay());
@@ -51,7 +51,7 @@ public class LineoutResultParserTest {
         assertEquals(HitLocation.SHORT_STOP, dto.getHitLocation());
 
         dto = parser.parse("Lineout: 3B (SS-3B Hole)");
-        assertEquals(PlateAppearanceResult.LINEOUT, dto.getResult());
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
         assertFalse(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
         assertTrue(dto.isBallHitInPlay());
@@ -60,7 +60,7 @@ public class LineoutResultParserTest {
         assertEquals(HitLocation.THIRD_BASE_SHORT_STOP, dto.getHitLocation());
 
         dto = parser.parse("Lineout: LF (Deep LF-CF)");
-        assertEquals(PlateAppearanceResult.LINEOUT, dto.getResult());
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
         assertFalse(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
         assertTrue(dto.isBallHitInPlay());

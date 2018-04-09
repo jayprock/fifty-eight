@@ -70,7 +70,7 @@ public class LineoutResultParser implements PlateAppearanceResultParser {
                     .runsBattedIn(1) //
                     .build();
         } else {
-            return PlateAppearanceResultDTO.builder(PlateAppearanceResult.LINEOUT) //
+            return PlateAppearanceResultDTO.builder(PlateAppearanceResult.BALL_IN_PLAY_OUT) //
                     .hitLocation(hitLocation) //
                     .hitType(HitType.LINE_DRIVE) //
                     .qualifiedAtBat(true) //

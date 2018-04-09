@@ -41,7 +41,7 @@ public class FlyBallResultParserTest {
     @Test
     public void testParse() {
         PlateAppearanceResultDTO dto = parser.parse("Flyball: LF");
-        assertEquals(PlateAppearanceResult.FLYOUT, dto.getResult());
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
         assertFalse(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
         assertTrue(dto.isBallHitInPlay());
@@ -59,7 +59,7 @@ public class FlyBallResultParserTest {
         assertEquals(HitLocation.DEEP_LEFT_FIELD, dto.getHitLocation());
 
         dto = parser.parse("Foul Flyball: LF (LF into Foul Terr.)");
-        assertEquals(PlateAppearanceResult.FLYOUT, dto.getResult());
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
         assertFalse(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
         assertTrue(dto.isBallHitInPlay());

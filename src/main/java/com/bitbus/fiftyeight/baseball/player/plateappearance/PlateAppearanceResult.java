@@ -11,9 +11,7 @@ public enum PlateAppearanceResult {
     HIT_BY_PITCH,
     STRIKEOUT_SWINGING,
     STRIKEOUT_LOOKING,
-    GROUNDOUT,
-    LINEOUT,
-    FLYOUT,
     SAC_FLY,
+    BALL_IN_PLAY_OUT,
     REACH_ON_ERROR;
 }
