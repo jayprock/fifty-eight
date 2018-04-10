@@ -18,7 +18,7 @@ public class StrikeoutResultParserTest {
     public void testParserFor() {
         assertTrue(parser.isParserFor("Strikeout Swinging"));
         assertTrue(parser.isParserFor("Strikeout Looking"));
-
+        assertTrue(parser.isParserFor("Strikeout (foul bunt)"));
     }
 
     @Test
@@ -52,6 +52,15 @@ public class StrikeoutResultParserTest {
 
         dto = parser.parse("Strikeout Looking");
         assertEquals(PlateAppearanceResult.STRIKEOUT_LOOKING, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertFalse(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertNull(dto.getHitType());
+        assertNull(dto.getHitLocation());
+
+        dto = parser.parse("Strikeout (foul bunt)");
+        assertEquals(PlateAppearanceResult.STRIKEOUT_BUNTING, dto.getResult());
         assertFalse(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
         assertFalse(dto.isBallHitInPlay());

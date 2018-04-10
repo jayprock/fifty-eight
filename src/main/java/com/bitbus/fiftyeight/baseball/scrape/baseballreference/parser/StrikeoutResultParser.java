@@ -34,6 +34,8 @@ public class StrikeoutResultParser implements PlateAppearanceResultParser {
             result = PlateAppearanceResult.STRIKEOUT_SWINGING;
         } else if (resultDescription.startsWith("Strikeout Looking")) {
             result = PlateAppearanceResult.STRIKEOUT_LOOKING;
+        } else if (resultDescription.startsWith("Strikeout (foul bunt)")) {
+            result = PlateAppearanceResult.STRIKEOUT_BUNTING;
         } else {
             throw new RuntimeException(
                     "Could not determine if strikeout was looking or swinging for description: " + resultDescription);

@@ -35,6 +35,7 @@ public class HitResultParserTest {
         assertTrue(parser
                 .isParserFor("Home Run (Line Drive to Deep LF Line); Ellis Scores; Yelich Scores; Stanton Scores"));
         assertTrue(parser.isParserFor("Ground-rule Double (Line Drive to Deep CF)"));
+        assertTrue(parser.isParserFor("Single to 3B/Bunt (Bunt to Weak 3B)"));
     }
 
     @Test
@@ -64,6 +65,15 @@ public class HitResultParserTest {
         assertEquals(PlateAppearanceResult.SINGLE, dto.getResult());
         assertEquals(HitType.LINE_DRIVE, dto.getHitType());
         assertEquals(HitLocation.SHORT_LEFT_FIELD, dto.getHitLocation());
+        assertEquals(0, dto.getRunsBattedIn());
+
+        dto = parser.parse("Single to 3B/Bunt (Bunt to Weak 3B)");
+        assertTrue(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(PlateAppearanceResult.SINGLE, dto.getResult());
+        assertEquals(HitType.BUNT, dto.getHitType());
+        assertEquals(HitLocation.WEAK_THIRD_BASE, dto.getHitLocation());
         assertEquals(0, dto.getRunsBattedIn());
     }
 

@@ -2,7 +2,7 @@ package com.bitbus.fiftyeight.baseball.player.plateappearance;
 
 public enum HitType {
 
-    GROUND_BALL("Ground Ball"), LINE_DRIVE("Line Drive"), FLYBALL("Fly Ball"), POPFLY("Popfly");
+    GROUND_BALL("Ground Ball"), LINE_DRIVE("Line Drive"), FLYBALL("Fly Ball"), POPFLY("Popfly"), BUNT("Bunt");
 
     private String displayName;
 
