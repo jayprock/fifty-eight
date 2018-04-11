@@ -43,10 +43,12 @@ public class BuntResultParser implements PlateAppearanceResultParser {
         log.trace("Determining the location of the bunt");
         HitLocation hitLocation;
         String[] descriptionParts = resultDescription.split("\\(|\\)");
+        boolean disallowRBI = false;
         if (descriptionParts.length == 1) {
             String hitLocationValue = resultDescription.split(":\\s")[1];
             if (resultDescription.contains("Double Play:")) {
                 hitLocation = HitLocation.findByDisplayName(hitLocationValue.split("\\s|-")[1]);
+                disallowRBI = true;
             } else {
                 hitLocation = HitLocation.findByDisplayName(hitLocationValue);
             }
@@ -60,13 +62,15 @@ public class BuntResultParser implements PlateAppearanceResultParser {
         if (runsScored > 1) {
             log.warn("More than 1 run scored on a bunt. This probably is not handled correctly!");
         }
+        int rbis = disallowRBI ? 0 : runsScored;
+        log.trace("RBIs assessed: " + rbis);
 
         return PlateAppearanceResultDTO.builder(result) //
                 .hitLocation(hitLocation) //
                 .hitType(HitType.BUNT) //
                 .qualifiedAtBat(result == PlateAppearanceResult.BALL_IN_PLAY_OUT)
                 .ballHitInPlay(true) //
-                .runsBattedIn(runsScored) //
+                .runsBattedIn(rbis) //
                 .build();
     }
 
