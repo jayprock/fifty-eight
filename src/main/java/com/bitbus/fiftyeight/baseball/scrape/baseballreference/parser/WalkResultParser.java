@@ -21,6 +21,7 @@ public class WalkResultParser implements PlateAppearanceResultParser {
         startingWords = new ArrayList<>();
         startingWords.add("Walk");
         startingWords.add("Intentional Walk");
+        startingWords.add("Hit By Pitch");
     }
 
     @Override
@@ -36,6 +37,8 @@ public class WalkResultParser implements PlateAppearanceResultParser {
             result = PlateAppearanceResult.WALK;
         } else if (resultDescription.startsWith(startingWords.get(1))) {
             result = PlateAppearanceResult.INTENTIONAL_WALK;
+        } else if (resultDescription.startsWith(startingWords.get(2))) {
+            result = PlateAppearanceResult.HIT_BY_PITCH;
         } else {
             throw new RuntimeException("Result description cannot be mapped to a walk starting word");
         }

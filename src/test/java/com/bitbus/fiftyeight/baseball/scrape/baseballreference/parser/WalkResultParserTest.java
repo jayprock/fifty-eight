@@ -20,6 +20,7 @@ public class WalkResultParserTest {
         assertTrue(parser.isParserFor("Walk; Judge to 2B"));
         assertTrue(parser.isParserFor("Walk; Grandal Scores; Puig to 3B; Hernandez to 2B"));
         assertTrue(parser.isParserFor("Intentional Walk"));
+        assertTrue(parser.isParserFor("Hit By Pitch"));
         assertFalse(parser.isParserFor("Popfly: 3B"));
         assertFalse(parser.isParserFor("Popfly: 2B (Deep SS-2B)"));
         assertFalse(parser.isParserFor("Foul Popfly: C (Behind Home)"));
@@ -79,6 +80,15 @@ public class WalkResultParserTest {
         assertFalse(dto.isQualifiedAtBat());
         assertFalse(dto.isBallHitInPlay());
         assertEquals(1, dto.getRunsBattedIn());
+        assertNull(dto.getHitType());
+        assertNull(dto.getHitLocation());
+
+        dto = parser.parse("Hit By Pitch");
+        assertEquals(PlateAppearanceResult.HIT_BY_PITCH, dto.getResult());
+        assertFalse(dto.isHit());
+        assertFalse(dto.isQualifiedAtBat());
+        assertFalse(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
         assertNull(dto.getHitType());
         assertNull(dto.getHitLocation());
     }
