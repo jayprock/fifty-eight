@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
@@ -39,6 +40,7 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.InningType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PitchResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearance;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceService;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.RunnersOnBase;
 import com.bitbus.fiftyeight.baseball.scrape.baseballreference.parser.PlateAppearanceResultParser;
 import com.bitbus.fiftyeight.baseball.starter.BaseballGameStarterService;
@@ -74,6 +76,8 @@ public class BaseballReferenceScraper {
     private BaseballPlayerService playerService;
     @Autowired
     private BaseballGameStarterService baseballGameStarterService;
+    @Autowired
+    private PlateAppearanceService plateAppearanceService;
     @Autowired
     private List<PlateAppearanceResultParser> plateAppearanceResultParsers;
 
@@ -338,88 +342,134 @@ public class BaseballReferenceScraper {
         viewPitchesButton.click();
         List<WebElement> plateAppearanceRows = driver.findElements(By.xpath(
                 "//table[@id='play_by_play']/descendant::tr[contains(@class,'top_inning') or contains(@class,'bottom_inning')]"));
+        String inning = "t1";
+        List<PlateAppearance> plateAppearancesInInning = new ArrayList<>();
         for (WebElement plateAppearanceRow : plateAppearanceRows) {
-            createPlateAppearance(plateAppearanceRow, players);
+            log.trace("Getting the inning data");
+            String inningText = plateAppearanceRow.findElement(By.tagName("th")).getText();
+            if (!inning.equals(inningText)) {
+                log.trace("All the plate appearances in inning {} have been assessed. Saving results", inning);
+                inning = inningText;
+                plateAppearanceService.save(plateAppearancesInInning);
+                plateAppearancesInInning = new ArrayList<>();
+            }
+            PlateAppearance plateAppearance = new PlateAppearance();
+            plateAppearance.setInning(Character.getNumericValue(inningText.charAt(1)));
+            plateAppearance.setInningType(InningType.findByLookupId(inningText.charAt(0)));
+
+            log.trace("Getting all other table columns for this plate appearance");
+            List<WebElement> columns = plateAppearanceRow.findElements(By.tagName("td"));
+
+            log.trace("Getting the plate appearance description");
+            String plateAppearanceDescription = columns.get(10).getText();
+
+            int stolenBases = StringUtils.countMatches(plateAppearanceDescription, "Steals");
+            log.trace("Description contains {} stolen bases", stolenBases);
+            if (stolenBases > 0) {
+                int stolenBasesRecorded = 0;
+                for (int i = plateAppearancesInInning.size() - 1; i >= 0; i--) {
+                    PlateAppearance pa = plateAppearancesInInning.get(i);
+                    String playerStealReference = pa.getBatter().getLastName() + " Steals";
+                    if (plateAppearanceDescription.contains(playerStealReference)) {
+                        pa.setBasesEventuallyStolen(pa.getBasesEventuallyStolen() + 1);
+                        stolenBasesRecorded++;
+                        if (stolenBasesRecorded == stolenBases) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            int runsScored = StringUtils.countMatches(plateAppearanceDescription, "Scores");
+            log.trace("Description contains {} runs scored", runsScored);
+            if (runsScored > 0) {
+                int runsScoredRecorded = 0;
+                for (int i = plateAppearancesInInning.size() - 1; i >= 0; i--) {
+                    PlateAppearance pa = plateAppearancesInInning.get(i);
+                    String playerScoresReference = pa.getBatter().getLastName() + " Scores";
+                    if (plateAppearanceDescription.contains(playerScoresReference)) {
+                        pa.setRunEventuallyScored(true);
+                        runsScoredRecorded++;
+                        if (runsScoredRecorded == runsScored) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            log.trace("Looking up a parser for the plate appearance description [{}]", plateAppearanceDescription);
+            PlateAppearanceResultParser resultParser = plateAppearanceResultParsers.stream() //
+                    .filter(parser -> parser.isParserFor(plateAppearanceDescription)) //
+                    .findFirst() //
+                    .orElseThrow(() -> new RuntimeException(
+                            "Could not find a parser for plate appearance description: " + plateAppearanceDescription));
+            log.trace("Matched parser [{}]", resultParser.getClass().getName());
+
+            PlateAppearanceResultDTO resultDTO = resultParser.parse(plateAppearanceDescription);
+
+            if (resultDTO.isNotPlateAppearanceResult()) {
+                log.trace("The result description is not a plate appearance result, skipping");
+                continue;
+            }
+
+            plateAppearance.setResultType(resultDTO.getResult());
+            plateAppearance.setQualifiedAtBat(resultDTO.isQualifiedAtBat());
+            plateAppearance.setResultsInHit(resultDTO.isHit());
+            plateAppearance.setHitType(resultDTO.getHitType());
+            plateAppearance.setHitLocation(resultDTO.getHitLocation());
+            plateAppearance.setRunsBattedIn(resultDTO.getRunsBattedIn());
+
+            log.trace("Attempting to parse the outs total");
+            plateAppearance.setOutsExisting(Integer.parseInt(columns.get(1).getText()));
+
+            log.trace("Determining the runners on base");
+            plateAppearance.setRunnersOnBase(RunnersOnBase.findByCode(columns.get(2).getText()));
+
+            log.trace("Parsing pitch count");
+            String pitchCountDetails = columns.get(3).getText();
+            plateAppearance.setPitchTotal(Integer.parseInt(pitchCountDetails.split(",")[0]));
+
+            log.trace("Determining the entire pitch sequence");
+            String pitchSequenceCode = pitchCountDetails.split("\\s")[1] //
+                    .replaceAll("V", "B") //
+                    .replaceAll("Y", "X") //
+                    .replaceAll("\\*|>|\\+|\\.|[123]", "");
+            if (pitchSequenceCode.length() != plateAppearance.getPitchTotal()) {
+                throw new RuntimeException(
+                        "Inconsistent pitch information found in row with text: " + plateAppearanceRow.getText());
+            }
+            List<PitchResult> pitchResults = pitchSequenceCode.chars() //
+                    .mapToObj(c -> new PitchResult((char) c, plateAppearance)) //
+                    .collect(Collectors.toList());
+            plateAppearance.setPitchResults(pitchResults);
+
+            log.trace("Get the resulting outs and runs scored from the plate appearance");
+            String runsScoredOutsMadeCode = columns.get(4).getText();
+            int outsResult = runsScoredOutsMadeCode.replaceAll("R", "").length();
+            plateAppearance.setOutsResult(outsResult);
+            int runsResult = runsScoredOutsMadeCode.replaceAll("O", "").length();
+            plateAppearance.setRunsResult(runsResult);
+
+            log.trace("Assessing the batter");
+            String batterName = columns.get(6).getText();
+            BaseballPlayer batter = players.stream() //
+                    .filter(player -> player.getFullName().equals(batterName)) //
+                    .findFirst() //
+                    .get();
+            plateAppearance.setBatter(batter);
+
+            log.trace("Assessing the pitcher");
+            String pitcherName = columns.get(7).getText();
+            BaseballPlayer pitcher = players.stream() //
+                    .filter(player -> player.getFullName().equals(pitcherName)) //
+                    .findFirst() //
+                    .get();
+            plateAppearance.setPitcher(pitcher);
         }
 
-    }
+        log.trace("Saving the last chunk of plate appearances");
+        plateAppearanceService.save(plateAppearancesInInning);
 
-    private void createPlateAppearance(WebElement plateAppearanceRow, List<BaseballPlayer> players) {
-        PlateAppearance plateAppearance = new PlateAppearance();
-        log.trace("Getting the inning data");
-        String inningText = plateAppearanceRow.findElement(By.tagName("th")).getText();
-        plateAppearance.setInning(Character.getNumericValue(inningText.charAt(1)));
-        plateAppearance.setInningType(InningType.findByLookupId(inningText.charAt(0)));
-
-        log.trace("Getting all other table columns for this plate appearance");
-        List<WebElement> columns = plateAppearanceRow.findElements(By.tagName("td"));
-
-        log.trace("Attempting to parse the outs total");
-        plateAppearance.setOutsExisting(Integer.parseInt(columns.get(1).getText()));
-
-        log.trace("Determining the runners on base");
-        plateAppearance.setRunnersOnBase(RunnersOnBase.findByCode(columns.get(2).getText()));
-
-        log.trace("Parsing pitch count");
-        String pitchCountDetails = columns.get(3).getText();
-        plateAppearance.setPitchTotal(Integer.parseInt(pitchCountDetails.split(",")[0]));
-
-        log.trace("Determining the entire pitch sequence");
-        String pitchSequenceCode = pitchCountDetails.split("\\s")[1] //
-                .replaceAll("V", "B") //
-                .replaceAll("Y", "X") //
-                .replaceAll("\\*|>|\\+|\\.|[123]", "");
-        if (pitchSequenceCode.length() != plateAppearance.getPitchTotal()) {
-            throw new RuntimeException(
-                    "Inconsistent pitch information found in row with text: " + plateAppearanceRow.getText());
-        }
-        List<PitchResult> pitchResults = pitchSequenceCode.chars() //
-                .mapToObj(c -> new PitchResult((char) c, plateAppearance)) //
-                .collect(Collectors.toList());
-        plateAppearance.setPitchResults(pitchResults);
-
-        log.trace("Get the resulting outs and runs scored from the plate appearance");
-        String runsScoredOutsMadeCode = columns.get(4).getText();
-        int outsResult = runsScoredOutsMadeCode.replaceAll("R", "").length();
-        plateAppearance.setOutsResult(outsResult);
-        int runsResult = runsScoredOutsMadeCode.replaceAll("O", "").length();
-        plateAppearance.setRunsResult(runsResult);
-
-        log.trace("Assessing the batter");
-        String batterName = columns.get(6).getText();
-        BaseballPlayer batter = players.stream() //
-                .filter(player -> player.getFullName().equals(batterName)) //
-                .findFirst() //
-                .get();
-        plateAppearance.setBatter(batter);
-
-        log.trace("Assessing the pitcher");
-        String pitcherName = columns.get(7).getText();
-        BaseballPlayer pitcher = players.stream() //
-                .filter(player -> player.getFullName().equals(pitcherName)) //
-                .findFirst() //
-                .get();
-        plateAppearance.setPitcher(pitcher);
-
-        log.trace("Looking up a parser for the plate appearance description");
-        String plateAppearanceDescription = columns.get(10).getText();
-        PlateAppearanceResultParser resultParser = plateAppearanceResultParsers.stream() //
-                .filter(parser -> parser.isParserFor(plateAppearanceDescription)) //
-                .findFirst() //
-                .orElseThrow(() -> new RuntimeException(
-                        "Could not find a parser for plate appearance description: " + plateAppearanceDescription));
-        log.trace("Found parser [{}] for plate appearance description [{}]", resultParser.getClass().getName(),
-                plateAppearanceDescription);
-        PlateAppearanceResultDTO resultDTO = resultParser.parse(plateAppearanceDescription);
-        plateAppearance.setResultType(resultDTO.getResult());
-        plateAppearance.setQualifiedAtBat(resultDTO.isQualifiedAtBat());
-        plateAppearance.setResultsInHit(resultDTO.isHit());
-        plateAppearance.setHitType(resultDTO.getHitType());
-        plateAppearance.setHitLocation(resultDTO.getHitLocation());
-        plateAppearance.setRunsBattedIn(resultDTO.getRunsBattedIn());
-        // TODO - handle stolen base scenario (2 rows) -- When assessing the result, just skip if a
-        // stolen base
-        // TODO - track post-hit activities (e.g. did the runner score, stolen bases, etc)
     }
 
 

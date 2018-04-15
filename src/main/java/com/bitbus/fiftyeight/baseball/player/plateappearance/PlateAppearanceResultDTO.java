@@ -10,12 +10,11 @@ public class PlateAppearanceResultDTO {
     private PlateAppearanceResult result;
     private boolean hit;
     private boolean qualifiedAtBat;
-    // TODO - What constitutes a ball in play? What do I want to constitute this? Consider
-    // HitLocation property...
     private boolean ballHitInPlay;
     private int runsBattedIn;
     private HitType hitType;
     private HitLocation hitLocation;
+    private boolean notPlateAppearanceResult;
 
     private static PlateAppearanceResultDTOBuilder builder() {
         return new PlateAppearanceResultDTOBuilder();
