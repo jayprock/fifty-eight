@@ -3,6 +3,7 @@ package com.bitbus.fiftyeight.baseball.scrape.baseballreference;
 import static com.bitbus.fiftyeight.common.scrape.ScrapeSleeper.randomSleep;
 import static com.bitbus.fiftyeight.common.scrape.ScrapeSleeper.sleep;
 
+import java.text.Collator;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -80,6 +81,8 @@ public class BaseballReferenceScraper {
     private PlateAppearanceService plateAppearanceService;
     @Autowired
     private List<PlateAppearanceResultParser> plateAppearanceResultParsers;
+    @Autowired
+    private Collator nameCollator;
 
     private Map<String, BaseballTeam> teamNameMap = new HashMap<>();
 
@@ -144,7 +147,6 @@ public class BaseballReferenceScraper {
                     descriptionComponents[1]);
             throw new RuntimeException("Unable to identify team.");
         }
-        createPlateAppearances(null);
 
         BaseballMatchup matchup =
                 createMatchup(homeTeam, awayTeam, descriptionComponents[2], matchupBaseballReferenceId);
@@ -153,7 +155,7 @@ public class BaseballReferenceScraper {
 
         createStarters(playersInMatchup, matchup);
 
-        // TODO - Get game play-by-play
+        createPlateAppearances(playersInMatchup);
 
         log.debug("Done scraping game data, closing tab.");
         randomSleep();
@@ -453,7 +455,7 @@ public class BaseballReferenceScraper {
             log.trace("Assessing the batter");
             String batterName = columns.get(6).getText();
             BaseballPlayer batter = players.stream() //
-                    .filter(player -> player.getFullName().equals(batterName)) //
+                    .filter(player -> nameCollator.compare(player.getFullName(), batterName) == 0) //
                     .findFirst() //
                     .get();
             plateAppearance.setBatter(batter);
@@ -461,7 +463,7 @@ public class BaseballReferenceScraper {
             log.trace("Assessing the pitcher");
             String pitcherName = columns.get(7).getText();
             BaseballPlayer pitcher = players.stream() //
-                    .filter(player -> player.getFullName().equals(pitcherName)) //
+                    .filter(player -> nameCollator.compare(player.getFullName(), pitcherName) == 0) //
                     .findFirst() //
                     .get();
             plateAppearance.setPitcher(pitcher);

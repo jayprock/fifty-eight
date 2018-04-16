@@ -60,7 +60,7 @@ public class HitResultParser implements PlateAppearanceResultParser {
         log.trace("Hit type: {}", hitType);
         HitLocation hitLocation;
         if (hitDetailParts.length > 1) {
-            hitLocation = HitLocation.findByDisplayName(hitDetailParts[1]);
+            hitLocation = HitLocation.findByDisplayName(hitDetailParts[1].replace(" Hole", ""));
         } else {
             hitLocation = HitLocation.findByDisplayName(summaryParts[1]);
         }

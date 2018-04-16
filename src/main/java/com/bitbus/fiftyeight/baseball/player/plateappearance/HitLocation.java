@@ -50,6 +50,7 @@ public enum HitLocation {
     DEEP_CENTER_FIELD_RIGHT_FIELD("Deep CF-RF", true),
     SHORT_RIGHT_FIELD("Short RF", true),
     RIGHT_FIELD("RF", true),
+    DEEP_RIGHT_FIELD("Deep RF", true),
     SHORT_RIGHT_FIELD_LINE("Short RF Line", true),
     RIGHT_FIELD_LINE("RF Line", true),
     DEEP_RIGHT_FIELD_LINE("Deep RF Line", true),
