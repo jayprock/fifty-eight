@@ -23,6 +23,9 @@ public class BuntResultParser implements PlateAppearanceResultParser {
         startingWords = new ArrayList<>();
         startingWords.add("Bunt");
         startingWords.add("Foul Bunt");
+        startingWords.add("Double Play: Bunt");
+        startingWords.add("Ground Ball Double Play: Bunt");
+        startingWords.add("Double Play: Foul Bunt");
     }
 
 
@@ -45,15 +48,14 @@ public class BuntResultParser implements PlateAppearanceResultParser {
         String[] descriptionParts = resultDescription.split("\\(|\\)");
         boolean disallowRBI = false;
         if (descriptionParts.length == 1) {
-            String hitLocationValue = resultDescription.split(":\\s")[1];
             if (resultDescription.contains("Double Play:")) {
-                hitLocation = HitLocation.findByDisplayName(hitLocationValue.split("\\s|-")[1]);
+                hitLocation = HitLocation.findByDisplayName(resultDescription.split(":\\sBunt\\s|-")[1]);
                 disallowRBI = true;
             } else {
-                hitLocation = HitLocation.findByDisplayName(hitLocationValue);
+                hitLocation = HitLocation.findByDisplayName(resultDescription.split("\\s|-")[2]);
             }
         } else {
-            hitLocation = HitLocation.findByDisplayName(descriptionParts[1]);
+            hitLocation = HitLocation.findByDisplayName(descriptionParts[1].replace(" Hole", ""));
         }
         log.trace("Location of bunt: " + hitLocation);
 
@@ -65,7 +67,8 @@ public class BuntResultParser implements PlateAppearanceResultParser {
         int rbis = disallowRBI ? 0 : runsScored;
         log.trace("RBIs assessed: " + rbis);
 
-        return PlateAppearanceResultDTO.builder(result) //
+        return PlateAppearanceResultDTO.builder() //
+                .result(result) //
                 .hitLocation(hitLocation) //
                 .hitType(HitType.BUNT) //
                 .qualifiedAtBat(result == PlateAppearanceResult.BALL_IN_PLAY_OUT)

@@ -22,6 +22,16 @@ public class LineoutResultParserTest {
         assertTrue(parser.isParserFor("Lineout: LF (Deep LF-CF)"));
         assertTrue(parser.isParserFor("Lineout: CF/Sacrifice Fly (Deep CF-RF); Panik Scores"));
         assertTrue(parser.isParserFor("Double Play: Lineout: SS; Bregman out at 2B/SS-2B"));
+        assertTrue(parser.isParserFor("Double Play: Lineout: 1B unassisted; Barnhart out at 1B/1B"));
+        assertTrue(parser.isParserFor("Foul Lineout: RF (RF into Foul Terr."));
+        assertTrue(parser.isParserFor("Lineout: RF/Sacrifice Fly; Hernandez Scores; Kendrick to 3B"));
+        assertTrue(parser.isParserFor("Lineout: P-1B; Polanco to 3B"));
+        assertTrue(parser
+                .isParserFor("Double Play: Foul Lineout: 1B unassisted (1B into Foul Terr.); Hicks out at 1B/1B"));
+        assertTrue(parser.isParserFor("Lineout: LF; Goldschmidt to 3B/Adv on E7 (throw)"));
+        assertTrue(parser.isParserFor("Line Drive Double Play: P; Hosmer out at 2B/P-2B"));
+
+
         assertFalse(parser.isParserFor("Flyball: LF/Sacrifice Fly (Deep LF); Gordon Scores/unER"));
         assertFalse(parser.isParserFor("Foul Flyball: LF (LF into Foul Terr.)"));
         assertFalse(parser.isParserFor("Flyball: LF"));
@@ -76,5 +86,77 @@ public class LineoutResultParserTest {
         assertEquals(1, dto.getRunsBattedIn());
         assertEquals(HitType.LINE_DRIVE, dto.getHitType());
         assertEquals(HitLocation.DEEP_CENTER_FIELD_RIGHT_FIELD, dto.getHitLocation());
+
+        dto = parser.parse("Double Play: Lineout: SS; Bregman out at 2B/SS-2B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertEquals(HitLocation.SHORT_STOP, dto.getHitLocation());
+
+        dto = parser.parse("Double Play: Lineout: 1B unassisted; Barnhart out at 1B/1B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertEquals(HitLocation.FIRST_BASE, dto.getHitLocation());
+
+        dto = parser.parse("Foul Lineout: RF (RF into Foul Terr.");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertEquals(HitLocation.RIGHT_FIELD_FOUL_TERRITORY, dto.getHitLocation());
+
+        dto = parser.parse("Lineout: RF/Sacrifice Fly; Hernandez Scores; Kendrick to 3B");
+        assertEquals(PlateAppearanceResult.SAC_FLY, dto.getResult());
+        assertFalse(dto.isHit());
+        assertFalse(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(1, dto.getRunsBattedIn());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertEquals(HitLocation.RIGHT_FIELD, dto.getHitLocation());
+
+        dto = parser.parse("Lineout: P-1B; Polanco to 3B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertEquals(HitLocation.PITCHER, dto.getHitLocation());
+
+        dto = parser.parse("Double Play: Foul Lineout: 1B unassisted (1B into Foul Terr.); Hicks out at 1B/1B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertEquals(HitLocation.FIRST_BASE_FOUL_TERRITORY, dto.getHitLocation());
+
+        dto = parser.parse("Lineout: LF; Goldschmidt to 3B/Adv on E7 (throw)");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertEquals(HitLocation.LEFT_FIELD, dto.getHitLocation());
+
+        dto = parser.parse("Line Drive Double Play: P; Hosmer out at 2B/P-2B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertEquals(HitLocation.PITCHER, dto.getHitLocation());
     }
 }

@@ -15,9 +15,9 @@ public enum HitType {
     }
 
     public static HitType findByDisplayName(String displayName) {
-        String trimmedDisplayName = displayName.trim();
+        String displayNameNoWhitespace = displayName.replaceAll("\\s", "");
         for (HitType hitType : values()) {
-            if (hitType.getDisplayName().equalsIgnoreCase(trimmedDisplayName)) {
+            if (hitType.getDisplayName().replaceAll("\\s", "").equalsIgnoreCase(displayNameNoWhitespace)) {
                 return hitType;
             }
         }

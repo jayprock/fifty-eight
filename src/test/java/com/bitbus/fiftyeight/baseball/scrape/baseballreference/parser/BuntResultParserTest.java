@@ -22,7 +22,14 @@ public class BuntResultParserTest {
         assertTrue(parser.isParserFor("Bunt Popfly: 1B (Short 1B Line)"));
         assertTrue(parser.isParserFor("Bunt Lineout: P"));
         assertTrue(parser.isParserFor("Foul Bunt Popfly: 3B (Behind Home)"));
+        assertTrue(parser.isParserFor("Bunt Groundout: 1B unassisted/Sacrifice; Arcia to 2B"));
+        assertTrue(parser.isParserFor("Bunt Groundout: 3B-2B/Sacrifice (SS-3B Hole); Polanco to 3B; Kepler to 2B"));
+        assertTrue(parser.isParserFor("Bunt Groundout: 1B-2B/Sacrifice; Springer to 2B"));
         assertTrue(parser.isParserFor("Bunt Ground Ball Double Play: Bunt 1B-SS-2B"));
+        assertTrue(parser.isParserFor("Double Play: Bunt Popfly: P-3B (Short 1B Line)"));
+        assertTrue(parser.isParserFor("Ground Ball Double Play: Bunt 1B-2B-SS"));
+        assertTrue(
+                parser.isParserFor("Double Play: Foul Bunt Popfly: 3B (3B into Foul Terr.); Sanchez out at 3B/3B-SS"));
         assertFalse(parser.isParserFor("Popfly: 3B"));
         assertFalse(parser.isParserFor("Popfly: 2B (Deep SS-2B)"));
         assertFalse(parser.isParserFor("Foul Popfly: C (Behind Home)"));
@@ -104,6 +111,60 @@ public class BuntResultParserTest {
         assertEquals(0, dto.getRunsBattedIn());
         assertEquals(HitType.BUNT, dto.getHitType());
         assertEquals(HitLocation.FIRST_BASE, dto.getHitLocation());
+
+        dto = parser.parse("Bunt Groundout: 1B unassisted/Sacrifice; Arcia to 2B");
+        assertEquals(PlateAppearanceResult.SAC_BUNT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertFalse(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.BUNT, dto.getHitType());
+        assertEquals(HitLocation.FIRST_BASE, dto.getHitLocation());
+
+        dto = parser.parse("Bunt Groundout: 3B-2B/Sacrifice (SS-3B Hole); Polanco to 3B; Kepler to 2B");
+        assertEquals(PlateAppearanceResult.SAC_BUNT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertFalse(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.BUNT, dto.getHitType());
+        assertEquals(HitLocation.THIRD_BASE_SHORT_STOP, dto.getHitLocation());
+
+        dto = parser.parse("Double Play: Bunt Popfly: P-3B (Short 1B Line)");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.BUNT, dto.getHitType());
+        assertEquals(HitLocation.SHORT_FIRST_BASE_LINE, dto.getHitLocation());
+
+        dto = parser.parse("Bunt Groundout: 1B-2B/Sacrifice; Springer to 2B");
+        assertEquals(PlateAppearanceResult.SAC_BUNT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertFalse(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.BUNT, dto.getHitType());
+        assertEquals(HitLocation.FIRST_BASE, dto.getHitLocation());
+
+        dto = parser.parse("Ground Ball Double Play: Bunt 1B-2B-SS");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.BUNT, dto.getHitType());
+        assertEquals(HitLocation.FIRST_BASE, dto.getHitLocation());
+
+        dto = parser.parse("Double Play: Foul Bunt Popfly: 3B (3B into Foul Terr.); Sanchez out at 3B/3B-SS");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.BUNT, dto.getHitType());
+        assertEquals(HitLocation.THIRD_BASE_FOUL_TERRITORY, dto.getHitLocation());
 
     }
 }

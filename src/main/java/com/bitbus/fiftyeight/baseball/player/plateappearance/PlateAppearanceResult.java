@@ -15,5 +15,6 @@ public enum PlateAppearanceResult {
     SAC_FLY,
     SAC_BUNT,
     BALL_IN_PLAY_OUT,
-    REACH_ON_ERROR;
+    REACH_ON_ERROR,
+    CATCHERS_INTERFERENCE;
 }

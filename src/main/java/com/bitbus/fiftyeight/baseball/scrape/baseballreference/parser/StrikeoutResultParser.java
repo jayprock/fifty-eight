@@ -19,6 +19,7 @@ public class StrikeoutResultParser implements PlateAppearanceResultParser {
     public StrikeoutResultParser() {
         startingWords = new ArrayList<>();
         startingWords.add("Strikeout");
+        startingWords.add("Double Play: Strikeout");
     }
 
     @Override
@@ -30,17 +31,18 @@ public class StrikeoutResultParser implements PlateAppearanceResultParser {
     public PlateAppearanceResultDTO parse(String resultDescription) {
         PlateAppearanceResult result;
         log.trace("Determining if the batter struck out swinging or looking");
-        if (resultDescription.startsWith("Strikeout Swinging")) {
+        if (resultDescription.contains("Strikeout Swinging")) {
             result = PlateAppearanceResult.STRIKEOUT_SWINGING;
-        } else if (resultDescription.startsWith("Strikeout Looking")) {
+        } else if (resultDescription.contains("Strikeout Looking")) {
             result = PlateAppearanceResult.STRIKEOUT_LOOKING;
-        } else if (resultDescription.startsWith("Strikeout (foul bunt)")) {
+        } else if (resultDescription.contains("bunt")) {
             result = PlateAppearanceResult.STRIKEOUT_BUNTING;
         } else {
-            throw new RuntimeException(
-                    "Could not determine if strikeout was looking or swinging for description: " + resultDescription);
+            log.warn("Cannot determine type of strikeout. Defaulting to a strikeout swinging");
+            result = PlateAppearanceResult.STRIKEOUT_SWINGING;
         }
-        return PlateAppearanceResultDTO.builder(result) //
+        return PlateAppearanceResultDTO.builder() //
+                .result(result) //
                 .qualifiedAtBat(true) //
                 .build();
     }

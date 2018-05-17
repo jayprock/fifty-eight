@@ -27,6 +27,11 @@ public class GroundoutResultParserTest {
         assertTrue(parser.isParserFor("Groundout: 3B-1B (Weak 3B)"));
         assertTrue(parser.isParserFor("Groundout: 2B-SS/Forceout at 2B (Weak 2B); Gamel Scores; Haniger to 3B"));
         assertTrue(parser.isParserFor("Ground Ball Double Play: 3B-2B-1B"));
+        assertTrue(parser.isParserFor("Double Play: Groundout: P-1B (Weak 2B-1B); Kemp out at 3B/1B-SS"));
+        assertTrue(parser.isParserFor("Double Play: Groundout: 1B; Cardullo out at Hm/1B-C; Freeland to 2B"));
+        assertTrue(parser.isParserFor("Groundout: 1B-SS/Forceout at 2B; Romine to 2B/Adv on E6 (throw)"));
+        assertTrue(parser.isParserFor("Ground Ball Triple Play: SS-2B-1B (Deep SS-3B Hole)"));
+        assertFalse(parser.isParserFor("Ground Ball Double Play: Bunt 1B-2B-SS"));
         assertFalse(parser.isParserFor("Popfly: 3B"));
         assertFalse(parser.isParserFor("Foul Popfly: C (Behind Home)"));
         assertFalse(parser.isParserFor("Popfly: 3B (Weak SS)"));
@@ -142,6 +147,42 @@ public class GroundoutResultParserTest {
         assertEquals(0, dto.getRunsBattedIn());
         assertEquals(HitType.GROUND_BALL, dto.getHitType());
         assertEquals(HitLocation.THIRD_BASE, dto.getHitLocation());
+
+        dto = parser.parse("Double Play: Groundout: P-1B (Weak 2B-1B); Kemp out at 3B/1B-SS");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.GROUND_BALL, dto.getHitType());
+        assertEquals(HitLocation.WEAK_SECOND_BASE_FIRST_BASE, dto.getHitLocation());
+
+        dto = parser.parse("Double Play: Groundout: 1B; Cardullo out at Hm/1B-C; Freeland to 2B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.GROUND_BALL, dto.getHitType());
+        assertEquals(HitLocation.FIRST_BASE, dto.getHitLocation());
+
+        dto = parser.parse("Groundout: 1B-SS/Forceout at 2B; Romine to 2B/Adv on E6 (throw)");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.GROUND_BALL, dto.getHitType());
+        assertEquals(HitLocation.FIRST_BASE, dto.getHitLocation());
+
+        dto = parser.parse("Ground Ball Triple Play: SS-2B-1B (Deep SS-3B Hole)");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.GROUND_BALL, dto.getHitType());
+        assertEquals(HitLocation.DEEP_THIRD_BASE_SHORT_STOP, dto.getHitLocation());
     }
 
 }

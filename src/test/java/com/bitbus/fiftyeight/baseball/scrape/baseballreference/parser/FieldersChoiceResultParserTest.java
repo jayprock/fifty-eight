@@ -20,6 +20,9 @@ public class FieldersChoiceResultParserTest {
         assertTrue(parser.isParserFor("Fielder's Choice SS; Reynolds out at 3B/SS-3B-SS"));
         assertTrue(parser.isParserFor("Fielder's Choice 3B; Souza out at Hm/3B-C; Morrison to 3B"));
         assertTrue(parser.isParserFor("Fielder's Choice P/Sacrifice Bunt; Cozart to 3B; Barnhart to 2B"));
+        assertTrue(parser.isParserFor("Fielder's Choice C; Grichuk out at 3B/C-3B"));
+        assertTrue(parser
+                .isParserFor("Double Play: Fielder's Choice P unassisted; Revere out at Hm/P; Pennington out at 3B/P"));
         assertFalse(parser.isParserFor("Bunt Groundout: 3B-1B (Short 3B Line)"));
         assertFalse(parser.isParserFor("Bunt Groundout: C-2B/Sacrifice (Front of Home); Descalso to 2B"));
         assertFalse(parser.isParserFor("Bunt Popfly: 1B (Short 1B Line)"));
@@ -80,6 +83,25 @@ public class FieldersChoiceResultParserTest {
         assertEquals(0, dto.getRunsBattedIn());
         assertEquals(HitType.BUNT, dto.getHitType());
         assertEquals(HitLocation.PITCHER, dto.getHitLocation());
+
+        dto = parser.parse("Fielder's Choice C; Grichuk out at 3B/C-3B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.GROUND_BALL, dto.getHitType());
+        assertEquals(HitLocation.FRONT_OF_HOME, dto.getHitLocation());
+
+        dto = parser.parse("Double Play: Fielder's Choice P unassisted; Revere out at Hm/P; Pennington out at 3B/P");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.GROUND_BALL, dto.getHitType());
+        assertEquals(HitLocation.PITCHER, dto.getHitLocation());
+
     }
 
 }

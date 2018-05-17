@@ -51,7 +51,8 @@ public class WalkResultParser implements PlateAppearanceResultParser {
         }
         log.trace("RBIs assessed: " + runsScored);
 
-        return PlateAppearanceResultDTO.builder(result) //
+        return PlateAppearanceResultDTO.builder() //
+                .result(result) //
                 .runsBattedIn(runsScored) //
                 .build();
     }

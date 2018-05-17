@@ -22,6 +22,7 @@ public class FieldersChoiceResultParser implements PlateAppearanceResultParser {
     public FieldersChoiceResultParser() {
         startingWords = new ArrayList<>();
         startingWords.add("Fielder's Choice");
+        startingWords.add("Double Play: Fielder's Choice");
     }
 
     @Override
@@ -62,7 +63,7 @@ public class FieldersChoiceResultParser implements PlateAppearanceResultParser {
         }
 
         log.trace("Finding the hit for the fielder's choice");
-        String[] descriptionParts = resultDescription.split("\\s|;|/");
+        String[] descriptionParts = resultDescription.replace("Double Play: ", "").split("\\s|;|/");
         HitLocation hitLocation = HitLocation.findByDisplayName(descriptionParts[2]);
         log.trace("Hit location: " + hitLocation);
 

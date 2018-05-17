@@ -19,6 +19,9 @@ public class StrikeoutResultParserTest {
         assertTrue(parser.isParserFor("Strikeout Swinging"));
         assertTrue(parser.isParserFor("Strikeout Looking"));
         assertTrue(parser.isParserFor("Strikeout (foul bunt)"));
+        assertTrue(parser.isParserFor("Strikeout (missed bunt)"));
+        assertTrue(parser.isParserFor("Double Play: Strikeout Swinging; Beltran out at 2B/C-2B-1B"));
+        assertTrue(parser.isParserFor("Strikeout"));
     }
 
     @Test
@@ -67,5 +70,33 @@ public class StrikeoutResultParserTest {
         assertEquals(0, dto.getRunsBattedIn());
         assertNull(dto.getHitType());
         assertNull(dto.getHitLocation());
+
+        dto = parser.parse("Strikeout (missed bunt)");
+        assertEquals(PlateAppearanceResult.STRIKEOUT_BUNTING, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertFalse(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertNull(dto.getHitType());
+        assertNull(dto.getHitLocation());
+
+        dto = parser.parse("Double Play: Strikeout Swinging; Beltran out at 2B/C-2B-1B");
+        assertEquals(PlateAppearanceResult.STRIKEOUT_SWINGING, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertFalse(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertNull(dto.getHitType());
+        assertNull(dto.getHitLocation());
+
+        dto = parser.parse("Strikeout");
+        assertEquals(PlateAppearanceResult.STRIKEOUT_SWINGING, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertFalse(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertNull(dto.getHitType());
+        assertNull(dto.getHitLocation());
+
     }
 }

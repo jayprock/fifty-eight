@@ -23,6 +23,9 @@ public class LineoutResultParser implements PlateAppearanceResultParser {
         startingWords = new ArrayList<>();
         startingWords.add("Lineout");
         startingWords.add("Double Play: Lineout");
+        startingWords.add("Foul Lineout");
+        startingWords.add("Double Play: Foul Lineout");
+        startingWords.add("Line Drive Double Play");
     }
 
     @Override
@@ -34,9 +37,14 @@ public class LineoutResultParser implements PlateAppearanceResultParser {
     public PlateAppearanceResultDTO parse(String resultDescription) {
         log.trace("Determining the location of the lineout");
         HitLocation hitLocation;
-        String[] lineoutDescriptionParts = resultDescription.split("\\(|\\)");
+        String[] lineoutDescriptionParts = resultDescription.split(";")[0].split("\\(|\\)");
         if (lineoutDescriptionParts.length == 1) {
-            hitLocation = HitLocation.findByDisplayName(resultDescription.split(":\\s")[1]);
+            String[] hitLocationParts = resultDescription.split(":\\s|;|/|-");
+            if (resultDescription.startsWith("Double Play")) {
+                hitLocation = HitLocation.findByDisplayName(hitLocationParts[2].replace(" unassisted", ""));
+            } else {
+                hitLocation = HitLocation.findByDisplayName(hitLocationParts[1]);
+            }
         } else {
             String hitLocationLookupVal = lineoutDescriptionParts[1].replace(" Hole", "");
             hitLocation = HitLocation.findByDisplayName(hitLocationLookupVal);
@@ -50,7 +58,7 @@ public class LineoutResultParser implements PlateAppearanceResultParser {
             if (resultDescription.contains("Sacrifice Fly")) {
                 sacrifice = true;
             } else {
-                log.error("A run scored on a lineout, but did not find \"Sacrifice Fly\", is something wrong?");
+                log.warn("A run scored on a lineout, but did not find \"Sacrifice Fly\", is something wrong?");
             }
             if (runsScored > 1) {
                 log.warn(
@@ -62,7 +70,8 @@ public class LineoutResultParser implements PlateAppearanceResultParser {
 
         log.trace("Successfully parsed the lineout result description");
         if (sacrifice) {
-            return PlateAppearanceResultDTO.builder(PlateAppearanceResult.SAC_FLY) //
+            return PlateAppearanceResultDTO.builder() //
+                    .result(PlateAppearanceResult.SAC_FLY) //
                     .hitLocation(hitLocation) //
                     .hitType(HitType.LINE_DRIVE) //
                     .qualifiedAtBat(false) //
@@ -70,7 +79,8 @@ public class LineoutResultParser implements PlateAppearanceResultParser {
                     .runsBattedIn(1) //
                     .build();
         } else {
-            return PlateAppearanceResultDTO.builder(PlateAppearanceResult.BALL_IN_PLAY_OUT) //
+            return PlateAppearanceResultDTO.builder() //
+                    .result(PlateAppearanceResult.BALL_IN_PLAY_OUT) //
                     .hitLocation(hitLocation) //
                     .hitType(HitType.LINE_DRIVE) //
                     .qualifiedAtBat(true) //

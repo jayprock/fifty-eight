@@ -23,6 +23,8 @@ public class FlyBallResultParser implements PlateAppearanceResultParser {
         startingWords = new ArrayList<>();
         startingWords.add("Flyball");
         startingWords.add("Foul Flyball");
+        startingWords.add("Double Play: Flyball");
+        startingWords.add("Double Play: Foul Flyball");
     }
 
     @Override
@@ -34,11 +36,12 @@ public class FlyBallResultParser implements PlateAppearanceResultParser {
     public PlateAppearanceResultDTO parse(String resultDescription) {
         log.trace("Determining the location of the fly ball");
         HitLocation hitLocation;
-        String[] flyBallDescriptionParts = resultDescription.split("\\(|\\)");
+        String[] flyBallDescriptionParts = resultDescription.split(";")[0].split("\\(|\\)");
         if (flyBallDescriptionParts.length == 1) {
-            hitLocation = HitLocation.findByDisplayName(resultDescription.split(":\\s")[1]);
+            hitLocation =
+                    HitLocation.findByDisplayName(resultDescription.replace("Double Play: ", "").split(":\\s|;|/")[1]);
         } else {
-            hitLocation = HitLocation.findByDisplayName(flyBallDescriptionParts[1]);
+            hitLocation = HitLocation.findByDisplayName(flyBallDescriptionParts[1].replace(" Hole", ""));
         }
         log.trace("Fly ball location: {}", hitLocation);
 
@@ -49,7 +52,7 @@ public class FlyBallResultParser implements PlateAppearanceResultParser {
             if (resultDescription.contains("Sacrifice Fly")) {
                 sacrifice = true;
             } else {
-                log.error("A run scored on a flyball, but did not find \"Sacrifice Fly\", is something wrong?");
+                log.warn("A run scored on a flyball, but did not find \"Sacrifice Fly\", is something wrong?");
             }
             if (runsScored > 1) {
                 log.warn(
@@ -61,7 +64,8 @@ public class FlyBallResultParser implements PlateAppearanceResultParser {
 
         log.trace("Successfully parsed the flyball result description");
         if (sacrifice) {
-            return PlateAppearanceResultDTO.builder(PlateAppearanceResult.SAC_FLY) //
+            return PlateAppearanceResultDTO.builder() //
+                    .result(PlateAppearanceResult.SAC_FLY) //
                     .hitLocation(hitLocation) //
                     .hitType(HitType.FLYBALL) //
                     .qualifiedAtBat(false) //
@@ -69,7 +73,8 @@ public class FlyBallResultParser implements PlateAppearanceResultParser {
                     .runsBattedIn(1) //
                     .build();
         } else {
-            return PlateAppearanceResultDTO.builder(PlateAppearanceResult.BALL_IN_PLAY_OUT) //
+            return PlateAppearanceResultDTO.builder() //
+                    .result(PlateAppearanceResult.BALL_IN_PLAY_OUT) //
                     .hitLocation(hitLocation) //
                     .hitType(HitType.FLYBALL) //
                     .qualifiedAtBat(true) //

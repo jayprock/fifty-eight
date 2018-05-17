@@ -20,6 +20,15 @@ public class FlyBallResultParserTest {
         assertTrue(parser.isParserFor("Flyball: LF/Sacrifice Fly (Deep LF); Gordon Scores/unER"));
         assertTrue(parser.isParserFor("Foul Flyball: LF (LF into Foul Terr.)"));
         assertTrue(parser.isParserFor("Flyball: LF"));
+        assertTrue(parser.isParserFor("Flyball: RF; Toles to 3B"));
+        assertTrue(parser.isParserFor("Double Play: Flyball: RF (Deep CF-RF); Aoki out at 1B/RF-1B"));
+        assertTrue(parser.isParserFor("Flyball: LF/Sacrifice Fly; Marisnick Scores"));
+        assertTrue(parser.isParserFor("Flyball: LF (Deep SS-3B Hole)"));
+        assertTrue(
+                parser.isParserFor("Flyball: RF; Mercer Scores/unER/Adv on E9 (throw); Marte to 3B; McCutchen to 2B"));
+        assertTrue(parser.isParserFor("Double Play: Flyball: LF; Altherr out at Hm/LF-C"));
+        assertTrue(
+                parser.isParserFor("Double Play: Foul Flyball: LF (LF into Foul Terr.); Benintendi out at 2B/LF-2B"));
     }
 
     @Test
@@ -66,5 +75,69 @@ public class FlyBallResultParserTest {
         assertEquals(0, dto.getRunsBattedIn());
         assertEquals(HitType.FLYBALL, dto.getHitType());
         assertEquals(HitLocation.LEFT_FIELD_FOUL_TERRITORY, dto.getHitLocation());
+
+        dto = parser.parse("Flyball: RF; Toles to 3B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.FLYBALL, dto.getHitType());
+        assertEquals(HitLocation.RIGHT_FIELD, dto.getHitLocation());
+
+        dto = parser.parse("Double Play: Flyball: RF (Deep CF-RF); Aoki out at 1B/RF-1B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.FLYBALL, dto.getHitType());
+        assertEquals(HitLocation.DEEP_CENTER_FIELD_RIGHT_FIELD, dto.getHitLocation());
+
+        dto = parser.parse("Flyball: LF/Sacrifice Fly; Marisnick Scores");
+        assertEquals(PlateAppearanceResult.SAC_FLY, dto.getResult());
+        assertFalse(dto.isHit());
+        assertFalse(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(1, dto.getRunsBattedIn());
+        assertEquals(HitType.FLYBALL, dto.getHitType());
+        assertEquals(HitLocation.LEFT_FIELD, dto.getHitLocation());
+
+        dto = parser.parse("Flyball: LF (Deep SS-3B Hole)");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.FLYBALL, dto.getHitType());
+        assertEquals(HitLocation.DEEP_THIRD_BASE_SHORT_STOP, dto.getHitLocation());
+
+        dto = parser.parse("Flyball: RF; Mercer Scores/unER/Adv on E9 (throw); Marte to 3B; McCutchen to 2B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.FLYBALL, dto.getHitType());
+        assertEquals(HitLocation.RIGHT_FIELD, dto.getHitLocation());
+
+        dto = parser.parse("Double Play: Flyball: LF; Altherr out at Hm/LF-C");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.FLYBALL, dto.getHitType());
+        assertEquals(HitLocation.LEFT_FIELD, dto.getHitLocation());
+
+        dto = parser.parse("Double Play: Foul Flyball: LF (LF into Foul Terr.); Benintendi out at 2B/LF-2B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.FLYBALL, dto.getHitType());
+        assertEquals(HitLocation.LEFT_FIELD_FOUL_TERRITORY, dto.getHitLocation());
+
     }
 }

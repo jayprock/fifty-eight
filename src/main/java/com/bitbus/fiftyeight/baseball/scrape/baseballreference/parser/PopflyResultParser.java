@@ -23,6 +23,7 @@ public class PopflyResultParser implements PlateAppearanceResultParser {
         startingWords = new ArrayList<>();
         startingWords.add("Popfly");
         startingWords.add("Foul Popfly");
+        startingWords.add("Double Play: Popfly");
     }
 
     @Override
@@ -36,7 +37,8 @@ public class PopflyResultParser implements PlateAppearanceResultParser {
         HitLocation hitLocation;
         String[] popflyDescriptionParts = resultDescription.split("\\(|\\)");
         if (popflyDescriptionParts.length == 1) {
-            hitLocation = HitLocation.findByDisplayName(resultDescription.split(":\\s")[1]);
+            hitLocation = HitLocation
+                    .findByDisplayName(resultDescription.replace("Double Play: ", "").split(":\\s|/|;|-")[1]);
         } else {
             String hitLocationLookupVal = popflyDescriptionParts[1].replace(" Hole", "");
             hitLocation = HitLocation.findByDisplayName(hitLocationLookupVal);
@@ -52,7 +54,8 @@ public class PopflyResultParser implements PlateAppearanceResultParser {
         }
 
         log.trace("Successfully parsed the popfly result description");
-        return PlateAppearanceResultDTO.builder(PlateAppearanceResult.BALL_IN_PLAY_OUT) //
+        return PlateAppearanceResultDTO.builder() //
+                .result(PlateAppearanceResult.BALL_IN_PLAY_OUT) //
                 .hitLocation(hitLocation) //
                 .hitType(HitType.POPFLY) //
                 .qualifiedAtBat(true) //

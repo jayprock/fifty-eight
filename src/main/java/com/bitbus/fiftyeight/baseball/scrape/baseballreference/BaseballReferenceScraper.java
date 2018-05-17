@@ -40,9 +40,11 @@ import com.bitbus.fiftyeight.baseball.player.BatterType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.InningType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PitchResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearance;
+import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceService;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.RunnersOnBase;
+import com.bitbus.fiftyeight.baseball.scrape.baseballreference.parser.BaseballReferenceIdParser;
 import com.bitbus.fiftyeight.baseball.scrape.baseballreference.parser.PlateAppearanceResultParser;
 import com.bitbus.fiftyeight.baseball.starter.BaseballGameStarterService;
 import com.bitbus.fiftyeight.baseball.starter.BaseballPlayerStarterDTO;
@@ -70,6 +72,8 @@ public class BaseballReferenceScraper {
     @Autowired
     private BaseballScrapeProperties baseballProperties;
     @Autowired
+    private BaseballReferenceIdParser baseballReferenceIdParser;
+    @Autowired
     private BaseballTeamService teamService;
     @Autowired
     private BaseballMatchupService matchupService;
@@ -88,10 +92,9 @@ public class BaseballReferenceScraper {
 
     @PostConstruct
     private void init() {
-        log.debug("Getting all baseball teams.");
+        log.trace("Getting all baseball teams.");
         List<BaseballTeam> baseballTeams = teamService.findAll();
-        System.out.println(baseballTeams);
-        log.debug("Storing teams in map by name.");
+        log.trace("Storing teams in map by name.");
         for (BaseballTeam baseballTeam : baseballTeams) {
             teamNameMap.put(baseballTeam.getFullName(), baseballTeam);
         }
@@ -176,6 +179,11 @@ public class BaseballReferenceScraper {
         String[] timeComponents = driver.findElement(By.xpath("//div[@class='scorebox_meta']/div[2]"))
                 .getText() //
                 .split("\\s");
+        if ("Rescheduled".equals(timeComponents[0]) || "Recheduled".equals(timeComponents[0])) {
+            timeComponents = driver.findElement(By.xpath("//div[@class='scorebox_meta']/div[3]"))
+                    .getText() //
+                    .split("\\s");
+        }
         String time = timeComponents[2];
         String ampm = timeComponents[3].equals("a.m.") ? "AM" : "PM";
         LocalDateTime gameDateTime = LocalDateTime.parse(date + " " + time + " " + ampm, FORMATTER) //
@@ -231,7 +239,7 @@ public class BaseballReferenceScraper {
                             .filter(positionText -> !positionText.equals("PR"))
                             .map(positionText -> BaseballPosition.findByPositionId(positionText))
                             .collect(Collectors.toList());
-            String playerBaseballReferenceId = getBaseballReferenceId(playerLink);
+            String playerBaseballReferenceId = baseballReferenceIdParser.parse(playerLink.getAttribute("href"));
             Optional<BaseballPlayer> playerOpt = playerService.findByBaseballReferenceId(playerBaseballReferenceId);
             if (playerOpt.isPresent()) {
                 BaseballPlayer player = playerOpt.get();
@@ -252,11 +260,13 @@ public class BaseballReferenceScraper {
                     log.debug("Player already found with ID {}. Will not attempt to create.",
                             playerBaseballReferenceId);
                 }
+                players.add(player);
                 continue;
             }
             randomSleep();
-            log.debug("Need to get player data for {} with ID {}. Opening player page in a new tab.",
-                    playerLink.getText(), playerBaseballReferenceId);
+            String fullName = playerLink.getText();
+            log.debug("Need to get player data for {} with ID {}. Opening player page in a new tab.", fullName,
+                    playerBaseballReferenceId);
             playerLink.sendKeys(OPEN_LINK_IN_NEW_TAB);
             String playerTabHandle = driver.getWindowHandles()
                     .stream() //
@@ -275,7 +285,6 @@ public class BaseballReferenceScraper {
 
             log.debug("Getting player metadata");
             WebElement playerMetaElement = driver.findElement(By.id("meta"));
-            String fullName = playerMetaElement.findElement(By.tagName("h1")).getText();
             String[] names = fullName.split("\\s");
             player.setFirstName(names[0]);
             player.setLastName(names[names.length - 1]);
@@ -290,8 +299,11 @@ public class BaseballReferenceScraper {
                     String[] metaComponents = metaBlock.getText().split("\\s");
                     player.setBatsFrom(BatterType.findByLookupName(metaComponents[1]));
                     player.setThrowsFrom(DominateHand.findByLookupName(metaComponents[6]));
-                    String size = metaBlock.findElement(By.xpath("following-sibling::p")).getText();
-                    String[] sizeElements = size.split("-|,\\s|lb");
+                    WebElement sizeElement = metaBlock.findElement(By.xpath("following-sibling::p"));
+                    if (!Character.isDigit(sizeElement.getText().charAt(0))) {
+                        sizeElement = sizeElement.findElement(By.xpath("following-sibling::p"));
+                    }
+                    String[] sizeElements = sizeElement.getText().split("-|,\\s|lb");
                     int heightInches = Integer.valueOf(sizeElements[0]) * 12 + Integer.valueOf(sizeElements[1]);
                     player.setHeight(heightInches);
                     player.setHeightUnit(HeightUnit.IN);
@@ -324,7 +336,7 @@ public class BaseballReferenceScraper {
             BaseballPosition fieldingPosition = BaseballPosition
                     .findByPositionId(starterLink.findElement(By.xpath("../following-sibling::td")).getText());
             startingPlayerDTO.setFieldingPosition(fieldingPosition);
-            String playerBaseballReferenceId = getBaseballReferenceId(starterLink);
+            String playerBaseballReferenceId = baseballReferenceIdParser.parse(starterLink.getAttribute("href"));
             BaseballPlayer startingPlayer = players.stream() //
                     .filter(player -> player.getBaseballReferenceId().equals(playerBaseballReferenceId)) //
                     .findFirst() //
@@ -429,14 +441,22 @@ public class BaseballReferenceScraper {
 
             log.trace("Parsing pitch count");
             String pitchCountDetails = columns.get(3).getText();
-            plateAppearance.setPitchTotal(Integer.parseInt(pitchCountDetails.split(",")[0]));
-
+            String pitchCount = pitchCountDetails.split(",")[0];
+            if (plateAppearance.getResultType() == PlateAppearanceResult.INTENTIONAL_WALK
+                    && StringUtils.isEmpty(pitchCount)) {
+                plateAppearance.setPitchTotal(0);
+            } else {
+                plateAppearance.setPitchTotal(Integer.parseInt(pitchCount));
+            }
             log.trace("Determining the entire pitch sequence");
             String pitchSequenceCode = pitchCountDetails.split("\\s")[1] //
                     .replaceAll("V", "B") //
                     .replaceAll("Y", "X") //
-                    .replaceAll("\\*|>|\\+|\\.|[123]", "");
-            if (pitchSequenceCode.length() != plateAppearance.getPitchTotal()) {
+                    .replaceAll("\\*|>|\\+|\\.|[123]|N|\\^|D", "");
+            int pitchCountOffset = StringUtils.countMatches(pitchCountDetails, 'V');
+            if (pitchSequenceCode.length() - pitchCountOffset != plateAppearance.getPitchTotal()) {
+                log.error("Expected {} pitches, but found {}", plateAppearance.getPitchTotal(),
+                        pitchSequenceCode.length() - pitchCountOffset);
                 throw new RuntimeException(
                         "Inconsistent pitch information found in row with text: " + plateAppearanceRow.getText());
             }
@@ -474,10 +494,5 @@ public class BaseballReferenceScraper {
 
     }
 
-
-    public String getBaseballReferenceId(WebElement baseballReferenceLink) {
-        String[] linkComponents = baseballReferenceLink.getAttribute("href").split("\\/|\\.");
-        return linkComponents[linkComponents.length - 2];
-    }
 
 }

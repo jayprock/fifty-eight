@@ -3,8 +3,11 @@ package com.bitbus.fiftyeight.baseball.scrape.baseballreference.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
 
+@Component
 public class WildPitchResultParser implements PlateAppearanceResultParser {
 
     private List<String> startingWords;
@@ -12,6 +15,7 @@ public class WildPitchResultParser implements PlateAppearanceResultParser {
     public WildPitchResultParser() {
         startingWords = new ArrayList<>();
         startingWords.add("Wild Pitch");
+        startingWords.add("Passed Ball");
     }
 
     @Override
@@ -21,7 +25,7 @@ public class WildPitchResultParser implements PlateAppearanceResultParser {
 
     @Override
     public PlateAppearanceResultDTO parse(String resultDescription) {
-        return PlateAppearanceResultDTO.builder(null).notPlateAppearanceResult(true).build();
+        return PlateAppearanceResultDTO.builder().notPlateAppearanceResult(true).build();
     }
 
 }

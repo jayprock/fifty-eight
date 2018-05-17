@@ -21,7 +21,7 @@ public class StealResultParser implements PlateAppearanceResultParser {
 
     @Override
     public PlateAppearanceResultDTO parse(String resultDescription) {
-        return PlateAppearanceResultDTO.builder(null).notPlateAppearanceResult(true).build();
+        return PlateAppearanceResultDTO.builder().notPlateAppearanceResult(true).build();
     }
 
 }

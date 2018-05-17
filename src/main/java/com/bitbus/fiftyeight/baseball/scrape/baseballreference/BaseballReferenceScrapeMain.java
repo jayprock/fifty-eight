@@ -11,6 +11,7 @@ import org.springframework.context.annotation.ComponentScan;
 
 import com.bitbus.fiftyeight.FiftyEightApplication;
 import com.bitbus.fiftyeight.baseball.matchup.BaseballMatchupService;
+import com.bitbus.fiftyeight.baseball.scrape.baseballreference.parser.BaseballReferenceIdParser;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -21,6 +22,8 @@ public class BaseballReferenceScrapeMain {
 
     @Autowired
     private BaseballReferenceScraper scraper;
+    @Autowired
+    private BaseballReferenceIdParser baseballReferenceIdParser;
     @Autowired
     private BaseballMatchupService matchupService;
 
@@ -36,7 +39,7 @@ public class BaseballReferenceScrapeMain {
         for (WebElement dailyBoxscoreBlock : dailyBoxscoreBlocks) {
             List<WebElement> boxscoreLinks = scraper.getBoxscoreLinks(dailyBoxscoreBlock);
             for (WebElement boxscoreLink : boxscoreLinks) {
-                String matchupBaseballReferenceId = scraper.getBaseballReferenceId(boxscoreLink);
+                String matchupBaseballReferenceId = baseballReferenceIdParser.parse(boxscoreLink.getAttribute("href"));
                 if (matchupService.matchupExistsForBaseballReferenceId(matchupBaseballReferenceId)) {
                     log.info("Matchup with ID {} has already been processed. Skipping.", matchupBaseballReferenceId);
                     continue;
