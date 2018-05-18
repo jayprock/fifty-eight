@@ -11,6 +11,7 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitLocation;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
 
 public class HitResultParserTest {
 
@@ -58,7 +59,7 @@ public class HitResultParserTest {
     }
 
     @Test
-    public void testParseSingle() {
+    public void testParseSingle() throws ScrapeException {
         PlateAppearanceResultDTO dto = parser.parse("Single to LF (Ground Ball)");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
@@ -169,7 +170,7 @@ public class HitResultParserTest {
     }
 
     @Test
-    public void testParseDouble() {
+    public void testParseDouble() throws ScrapeException {
         PlateAppearanceResultDTO dto = parser.parse("Double to RF (Fly Ball to Deep CF-RF)");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
@@ -253,7 +254,7 @@ public class HitResultParserTest {
     }
 
     @Test
-    public void testParseTriple() {
+    public void testParseTriple() throws ScrapeException {
         PlateAppearanceResultDTO dto =
                 parser.parse("Triple to RF (Ground Ball); Flores Scores; Bruce Scores; Walker Scores");
         assertTrue(dto.isHit());
@@ -266,7 +267,7 @@ public class HitResultParserTest {
     }
 
     @Test
-    public void testParseHomeRun() {
+    public void testParseHomeRun() throws ScrapeException {
         PlateAppearanceResultDTO dto = parser.parse("Home Run (Fly Ball to Deep CF); Pederson Scores");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());
@@ -314,7 +315,7 @@ public class HitResultParserTest {
     }
 
     @Test
-    public void testParseGroundRuleDouble() {
+    public void testParseGroundRuleDouble() throws ScrapeException {
         PlateAppearanceResultDTO dto = parser.parse("Ground-rule Double (Line Drive to Deep CF)");
         assertTrue(dto.isHit());
         assertTrue(dto.isQualifiedAtBat());

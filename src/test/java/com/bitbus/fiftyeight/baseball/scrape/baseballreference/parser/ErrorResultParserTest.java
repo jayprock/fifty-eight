@@ -11,6 +11,7 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitLocation;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
 
 public class ErrorResultParserTest {
 
@@ -53,7 +54,7 @@ public class ErrorResultParserTest {
     }
 
     @Test
-    public void testParse() {
+    public void testParse() throws ScrapeException {
         PlateAppearanceResultDTO dto = parser.parse("Reached on E5 (Ground Ball to Weak 3B)");
         assertEquals(PlateAppearanceResult.REACH_ON_ERROR, dto.getResult());
         assertFalse(dto.isHit());

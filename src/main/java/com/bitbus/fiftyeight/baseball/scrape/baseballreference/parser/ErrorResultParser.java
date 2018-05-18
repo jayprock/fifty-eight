@@ -10,6 +10,7 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitLocation;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -30,7 +31,7 @@ public class ErrorResultParser implements PlateAppearanceResultParser {
     }
 
     @Override
-    public PlateAppearanceResultDTO parse(String resultDescription) {
+    public PlateAppearanceResultDTO parse(String resultDescription) throws ScrapeException {
         PlateAppearanceResult result = PlateAppearanceResult.REACH_ON_ERROR;
         int runsBattedIn = 0;
         boolean qualifiedAtBat = true;
@@ -49,7 +50,7 @@ public class ErrorResultParser implements PlateAppearanceResultParser {
             } else if (resultDescription.startsWith("Reached on E9")) {
                 hitLocation = HitLocation.RIGHT_FIELD;
             } else {
-                throw new RuntimeException(
+                throw new ScrapeException(
                         "Don't know how to assess hit location in odd sac fly scenario, with play description: "
                                 + resultDescription);
             }

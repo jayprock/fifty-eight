@@ -10,6 +10,8 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitLocation;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
+import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -33,7 +35,7 @@ public class FlyBallResultParser implements PlateAppearanceResultParser {
     }
 
     @Override
-    public PlateAppearanceResultDTO parse(String resultDescription) {
+    public PlateAppearanceResultDTO parse(String resultDescription) throws ScrapeException {
         log.trace("Determining the location of the fly ball");
         HitLocation hitLocation;
         String[] flyBallDescriptionParts = resultDescription.split(";")[0].split("\\(|\\)");
@@ -53,11 +55,17 @@ public class FlyBallResultParser implements PlateAppearanceResultParser {
                 sacrifice = true;
             } else {
                 log.warn("A run scored on a flyball, but did not find \"Sacrifice Fly\", is something wrong?");
+                throw new WarningScrapeException(
+                        "A run scored on a flyball, but did not find \"Sacrifice Fly\", is something wrong? Description: "
+                                + resultDescription);
             }
             if (runsScored > 1) {
                 log.warn(
                         "Flyball scenario with {} runs scored. Why are there more than 1 runs? More than 1 RBI never granted on sacrifice.",
                         runsScored);
+                throw new WarningScrapeException(
+                        "Flyball scenario with {} runs scored. Why are there more than 1 runs? More than 1 RBI never granted on sacrifice. Review description: "
+                                + resultDescription);
             }
         }
         log.trace("Flyball is a sacrifice finding: " + sacrifice);

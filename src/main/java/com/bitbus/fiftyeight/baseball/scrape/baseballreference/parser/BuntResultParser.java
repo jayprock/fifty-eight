@@ -10,6 +10,8 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitLocation;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
+import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -35,7 +37,7 @@ public class BuntResultParser implements PlateAppearanceResultParser {
     }
 
     @Override
-    public PlateAppearanceResultDTO parse(String resultDescription) {
+    public PlateAppearanceResultDTO parse(String resultDescription) throws ScrapeException {
         log.trace("Assessing bunt result");
         // Only bunt outs are handled, a bunt for a hit is just treated as a hit
         PlateAppearanceResult result = resultDescription.contains("Sacrifice") //
@@ -63,6 +65,9 @@ public class BuntResultParser implements PlateAppearanceResultParser {
         int runsScored = StringUtils.countMatches(resultDescription, "Scores");
         if (runsScored > 1) {
             log.warn("More than 1 run scored on a bunt. This probably is not handled correctly!");
+            throw new WarningScrapeException(
+                    "More than 1 run scored on a bunt. This probably is not handled correctly! Description: "
+                            + resultDescription);
         }
         int rbis = disallowRBI ? 0 : runsScored;
         log.trace("RBIs assessed: " + rbis);

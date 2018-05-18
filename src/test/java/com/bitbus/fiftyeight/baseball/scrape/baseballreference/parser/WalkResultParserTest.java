@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
 
 public class WalkResultParserTest {
 
@@ -46,7 +47,7 @@ public class WalkResultParserTest {
     }
 
     @Test
-    public void testParse() {
+    public void testParse() throws ScrapeException {
         PlateAppearanceResultDTO dto = parser.parse("Walk");
         assertEquals(PlateAppearanceResult.WALK, dto.getResult());
         assertFalse(dto.isHit());

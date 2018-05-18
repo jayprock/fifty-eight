@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
 
 public interface PlateAppearanceResultParser {
 
@@ -29,5 +30,5 @@ public interface PlateAppearanceResultParser {
         return false;
     }
 
-    PlateAppearanceResultDTO parse(String resultDescription);
+    PlateAppearanceResultDTO parse(String resultDescription) throws ScrapeException;
 }

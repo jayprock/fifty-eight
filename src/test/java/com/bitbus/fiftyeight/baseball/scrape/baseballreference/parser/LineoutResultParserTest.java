@@ -10,6 +10,7 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitLocation;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
 
 public class LineoutResultParserTest {
 
@@ -50,7 +51,7 @@ public class LineoutResultParserTest {
     }
 
     @Test
-    public void testParse() {
+    public void testParse() throws ScrapeException {
         PlateAppearanceResultDTO dto = parser.parse("Lineout: SS");
         assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
         assertFalse(dto.isHit());

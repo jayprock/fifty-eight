@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
+import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -30,7 +32,7 @@ public class WalkResultParser implements PlateAppearanceResultParser {
     }
 
     @Override
-    public PlateAppearanceResultDTO parse(String resultDescription) {
+    public PlateAppearanceResultDTO parse(String resultDescription) throws ScrapeException {
         log.trace("Assessing the walk type");
         PlateAppearanceResult result;
         if (resultDescription.startsWith(startingWords.get(0))) {
@@ -40,7 +42,8 @@ public class WalkResultParser implements PlateAppearanceResultParser {
         } else if (resultDescription.startsWith(startingWords.get(2))) {
             result = PlateAppearanceResult.HIT_BY_PITCH;
         } else {
-            throw new RuntimeException("Result description cannot be mapped to a walk starting word");
+            throw new ScrapeException(
+                    "Result description [" + resultDescription + "] cannot be mapped to a walk starting word");
         }
         log.trace("Walk type: " + result);
 
@@ -48,6 +51,9 @@ public class WalkResultParser implements PlateAppearanceResultParser {
         int runsScored = StringUtils.countMatches(resultDescription, "Scores");
         if (runsScored > 1) {
             log.warn("A walk resulted in more than 1 RBI. Review, something is probably wrong!");
+            throw new WarningScrapeException(
+                    "A walk resulted in more than 1 RBI. Review, something is probably wrong! Descrption: "
+                            + resultDescription);
         }
         log.trace("RBIs assessed: " + runsScored);
 

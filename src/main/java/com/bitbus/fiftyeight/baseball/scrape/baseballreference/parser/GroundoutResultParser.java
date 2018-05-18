@@ -11,6 +11,8 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitLocation;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
+import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -43,7 +45,7 @@ public class GroundoutResultParser implements PlateAppearanceResultParser {
     }
 
     @Override
-    public PlateAppearanceResultDTO parse(String resultDescription) {
+    public PlateAppearanceResultDTO parse(String resultDescription) throws ScrapeException {
         log.trace("Determining the location of the groundout");
         HitLocation hitLocation;
         String[] descriptionParts = resultDescription.split(";")[0].split("\\(|\\)");
@@ -66,9 +68,15 @@ public class GroundoutResultParser implements PlateAppearanceResultParser {
         int runsScored = StringUtils.countMatches(resultDescription, "Scores");
         if (runsScored > 0 && (resultDescription.contains("No RBI") || resultDescription.contains("Error"))) {
             log.warn("Found groundout description that may not be handled correctly in RBI scenario. Review!");
+            throw new WarningScrapeException(
+                    "Found groundout description that may not be handled correctly in RBI scenario. Review description: "
+                            + resultDescription);
         }
         if (runsScored > 1) {
             log.warn("More than 1 run scored on a groundout. This probably is not handled correctly!");
+            throw new WarningScrapeException(
+                    "More than 1 run scored on a groundout. This probably is not handled correctly! Review description: "
+                            + resultDescription);
         }
         int rbis = disallowRBI ? 0 : runsScored;
         log.trace("RBIs assessed: " + rbis);

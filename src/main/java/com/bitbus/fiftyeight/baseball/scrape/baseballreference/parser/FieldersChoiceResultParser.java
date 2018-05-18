@@ -10,6 +10,8 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitLocation;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
+import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -31,7 +33,7 @@ public class FieldersChoiceResultParser implements PlateAppearanceResultParser {
     }
 
     @Override
-    public PlateAppearanceResultDTO parse(String resultDescription) {
+    public PlateAppearanceResultDTO parse(String resultDescription) throws ScrapeException {
         log.trace("Assessing Fielders Choice result, hitType, and if its a qualified at bat");
         PlateAppearanceResult result;
         HitType hitType;
@@ -56,8 +58,10 @@ public class FieldersChoiceResultParser implements PlateAppearanceResultParser {
         int rbis = 0;
         if (resultDescription.contains("Scores")) {
             int runsScored = StringUtils.countMatches(resultDescription, "Scores");
-            log.warn("Fielder's Choice with {} run(s) scored. This is unusual. Review", runsScored);
             rbis = 1;
+            log.warn("Fielder's Choice with {} run(s) scored. This is unusual. Review", runsScored);
+            throw new WarningScrapeException("Fielder's Choice with " + runsScored
+                    + " run(s) scored. This is unusual. Review description: " + resultDescription);
         } else {
             log.trace("No runs scored, this is normal");
         }

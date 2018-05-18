@@ -10,6 +10,8 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitLocation;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
+import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -32,7 +34,7 @@ public class PopflyResultParser implements PlateAppearanceResultParser {
     }
 
     @Override
-    public PlateAppearanceResultDTO parse(String resultDescription) {
+    public PlateAppearanceResultDTO parse(String resultDescription) throws ScrapeException {
         log.trace("Determining the location of the Popfly");
         HitLocation hitLocation;
         String[] popflyDescriptionParts = resultDescription.split("\\(|\\)");
@@ -49,6 +51,9 @@ public class PopflyResultParser implements PlateAppearanceResultParser {
         int runsScored = StringUtils.countMatches(resultDescription, "Scores");
         if (runsScored > 0) {
             log.warn("Run(s) scored during a popfly. This is unexpected and potentially not handled. Review!");
+            throw new WarningScrapeException(
+                    "Run(s) scored during a popfly. This is unexpected and potentially not handled. Review description: "
+                            + resultDescription);
         } else {
             log.trace("No runs were scored, this is the expected result");
         }

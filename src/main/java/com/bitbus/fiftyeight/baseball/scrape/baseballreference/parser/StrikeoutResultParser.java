@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
+import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -28,7 +30,7 @@ public class StrikeoutResultParser implements PlateAppearanceResultParser {
     }
 
     @Override
-    public PlateAppearanceResultDTO parse(String resultDescription) {
+    public PlateAppearanceResultDTO parse(String resultDescription) throws ScrapeException {
         PlateAppearanceResult result;
         log.trace("Determining if the batter struck out swinging or looking");
         if (resultDescription.contains("Strikeout Swinging")) {
@@ -38,8 +40,11 @@ public class StrikeoutResultParser implements PlateAppearanceResultParser {
         } else if (resultDescription.contains("bunt")) {
             result = PlateAppearanceResult.STRIKEOUT_BUNTING;
         } else {
-            log.warn("Cannot determine type of strikeout. Defaulting to a strikeout swinging");
             result = PlateAppearanceResult.STRIKEOUT_SWINGING;
+            log.warn("Cannot determine type of strikeout. Defaulting to a strikeout swinging");
+            throw new WarningScrapeException(
+                    "Cannot determine type of strikeout. Defaulting to a strikeout swinging. Review description: "
+                            + resultDescription);
         }
         return PlateAppearanceResultDTO.builder() //
                 .result(result) //

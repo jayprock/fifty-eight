@@ -53,6 +53,7 @@ import com.bitbus.fiftyeight.baseball.team.BaseballTeamService;
 import com.bitbus.fiftyeight.common.player.DominateHand;
 import com.bitbus.fiftyeight.common.player.HeightUnit;
 import com.bitbus.fiftyeight.common.player.WeightUnit;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -122,7 +123,8 @@ public class BaseballReferenceScraper {
     }
 
     @Transactional
-    public void processBoxScore(WebElement boxscoreLink, String mainTabHandle, String matchupBaseballReferenceId) {
+    public void processBoxScore(WebElement boxscoreLink, String mainTabHandle, String matchupBaseballReferenceId)
+            throws ScrapeException {
         log.debug("Opening boxscore in a new tab, then scraping that page.");
         boxscoreLink.sendKeys(OPEN_LINK_IN_NEW_TAB);
         String boxscoreTabHandle = driver.getWindowHandles() //
@@ -141,14 +143,14 @@ public class BaseballReferenceScraper {
         if (descriptionComponents.length != 3) {
             log.error(
                     "The Box Score description could not be parsed as expected.  Any scraping could lead to unexpected results.");
-            throw new RuntimeException("Unexpected box score description format");
+            throw new ScrapeException("Unexpected box score description format: " + description);
         }
         BaseballTeam awayTeam = teamNameMap.get(descriptionComponents[0]);
         BaseballTeam homeTeam = teamNameMap.get(descriptionComponents[1]);
         if (awayTeam == null || homeTeam == null) {
             log.error("Could not map {} or {} to a persisted team.", descriptionComponents[0],
                     descriptionComponents[1]);
-            throw new RuntimeException("Unable to identify team.");
+            throw new ScrapeException("Error identifying teams from description: " + description);
         }
 
         BaseballMatchup matchup =
@@ -167,7 +169,7 @@ public class BaseballReferenceScraper {
     }
 
     private BaseballMatchup createMatchup(BaseballTeam homeTeam, BaseballTeam awayTeam, String date,
-            String baseballReferenceId) {
+            String baseballReferenceId) throws ScrapeException {
 
         log.info("Create a new matchup with id {}.", baseballReferenceId);
         BaseballMatchup matchup = new BaseballMatchup();
@@ -197,7 +199,8 @@ public class BaseballReferenceScraper {
         List<WebElement> scoreElements = driver.findElements(By.className("score"));
         if (scoreElements.size() != 2) {
             log.error("Unexpected results searching for score data. Found {} elements", scoreElements.size());
-            throw new RuntimeException("Unexpected score data.");
+            throw new ScrapeException("Unexpected results searching for score data in game with ID "
+                    + baseballReferenceId + " played on " + date);
         }
         int awayTeamScore = Integer.parseInt(scoreElements.get(0).getText());
         int homeTeamScore = Integer.parseInt(scoreElements.get(1).getText());
@@ -348,7 +351,7 @@ public class BaseballReferenceScraper {
         baseballGameStarterService.save(startingPlayerDTOs, matchup);
     }
 
-    private void createPlateAppearances(List<BaseballPlayer> players) {
+    private void createPlateAppearances(List<BaseballPlayer> players) throws ScrapeException {
         log.debug("Processing the matchup play by play data");
         WebElement viewPitchesButton = driver.findElement(By.xpath("//span[text()='View Pitches']/.."));
         actions.moveToElement(viewPitchesButton).perform();
@@ -415,7 +418,7 @@ public class BaseballReferenceScraper {
             PlateAppearanceResultParser resultParser = plateAppearanceResultParsers.stream() //
                     .filter(parser -> parser.isParserFor(plateAppearanceDescription)) //
                     .findFirst() //
-                    .orElseThrow(() -> new RuntimeException(
+                    .orElseThrow(() -> new ScrapeException(
                             "Could not find a parser for plate appearance description: " + plateAppearanceDescription));
             log.trace("Matched parser [{}]", resultParser.getClass().getName());
 
@@ -457,7 +460,7 @@ public class BaseballReferenceScraper {
             if (pitchSequenceCode.length() - pitchCountOffset != plateAppearance.getPitchTotal()) {
                 log.error("Expected {} pitches, but found {}", plateAppearance.getPitchTotal(),
                         pitchSequenceCode.length() - pitchCountOffset);
-                throw new RuntimeException(
+                throw new ScrapeException(
                         "Inconsistent pitch information found in row with text: " + plateAppearanceRow.getText());
             }
             List<PitchResult> pitchResults = pitchSequenceCode.chars() //

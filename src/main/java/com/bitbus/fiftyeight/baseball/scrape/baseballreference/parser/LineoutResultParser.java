@@ -10,6 +10,8 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitLocation;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
+import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
+import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -34,7 +36,7 @@ public class LineoutResultParser implements PlateAppearanceResultParser {
     }
 
     @Override
-    public PlateAppearanceResultDTO parse(String resultDescription) {
+    public PlateAppearanceResultDTO parse(String resultDescription) throws ScrapeException {
         log.trace("Determining the location of the lineout");
         HitLocation hitLocation;
         String[] lineoutDescriptionParts = resultDescription.split(";")[0].split("\\(|\\)");
@@ -59,11 +61,17 @@ public class LineoutResultParser implements PlateAppearanceResultParser {
                 sacrifice = true;
             } else {
                 log.warn("A run scored on a lineout, but did not find \"Sacrifice Fly\", is something wrong?");
+                throw new WarningScrapeException(
+                        "A run scored on a lineout, but did not find \"Sacrifice Fly\", is something wrong? Review description: "
+                                + resultDescription);
             }
             if (runsScored > 1) {
                 log.warn(
                         "Lineout scenario with {} runs scored. Why are there more than 1 runs? More than 1 RBI never granted on sacrifice.",
                         runsScored);
+                throw new WarningScrapeException("Lineout scenario with " + runsScored
+                        + " runs scored. Why are there more than 1 runs? More than 1 RBI never granted on sacrifice. Make sure this is handled correctly. Result description: "
+                        + resultDescription);
             }
         }
         log.trace("Lineout sacrifice assessment: " + sacrifice);
