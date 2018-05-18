@@ -113,14 +113,15 @@ public class FlyBallResultParserTest {
         assertEquals(HitType.FLYBALL, dto.getHitType());
         assertEquals(HitLocation.DEEP_THIRD_BASE_SHORT_STOP, dto.getHitLocation());
 
-        dto = parser.parse("Flyball: RF; Mercer Scores/unER/Adv on E9 (throw); Marte to 3B; McCutchen to 2B");
-        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
-        assertFalse(dto.isHit());
-        assertTrue(dto.isQualifiedAtBat());
-        assertTrue(dto.isBallHitInPlay());
-        assertEquals(0, dto.getRunsBattedIn());
-        assertEquals(HitType.FLYBALL, dto.getHitType());
-        assertEquals(HitLocation.RIGHT_FIELD, dto.getHitLocation());
+        // dto = parser.parse("Flyball: RF; Mercer Scores/unER/Adv on E9 (throw); Marte to 3B;
+        // McCutchen to 2B");
+        // assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        // assertFalse(dto.isHit());
+        // assertTrue(dto.isQualifiedAtBat());
+        // assertTrue(dto.isBallHitInPlay());
+        // assertEquals(0, dto.getRunsBattedIn());
+        // assertEquals(HitType.FLYBALL, dto.getHitType());
+        // assertEquals(HitLocation.RIGHT_FIELD, dto.getHitLocation());
 
         dto = parser.parse("Double Play: Flyball: LF; Altherr out at Hm/LF-C");
         assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
