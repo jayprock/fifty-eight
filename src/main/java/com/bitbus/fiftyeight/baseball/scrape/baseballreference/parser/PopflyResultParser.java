@@ -26,6 +26,7 @@ public class PopflyResultParser implements PlateAppearanceResultParser {
         startingWords.add("Popfly");
         startingWords.add("Foul Popfly");
         startingWords.add("Double Play: Popfly");
+        startingWords.add("Double Play: Foul Popfly");
     }
 
     @Override

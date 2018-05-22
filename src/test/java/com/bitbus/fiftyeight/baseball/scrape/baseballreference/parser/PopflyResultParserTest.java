@@ -28,6 +28,7 @@ public class PopflyResultParserTest {
         assertTrue(parser.isParserFor("Double Play: Popfly: SS (Short CF); Gomez out at 1B/SS-1B"));
         assertTrue(parser.isParserFor("Double Play: Popfly: 1B; Panik out at 2B/1B-SS"));
         assertTrue(parser.isParserFor("Popfly: 1B-SS/Forceout at 2B"));
+        assertTrue(parser.isParserFor("Double Play: Foul Popfly: 2B (1B into Foul Terr.); Blackmon out at 1B/2B-P"));
         assertFalse(parser.isParserFor("Lineout: SS"));
         assertFalse(parser.isParserFor("Lineout: LF (Deep LF-CF)"));
         assertFalse(parser.isParserFor("Lineout: CF/Sacrifice Fly (Deep CF-RF); Panik Scores"));
@@ -139,5 +140,14 @@ public class PopflyResultParserTest {
         assertEquals(0, dto.getRunsBattedIn());
         assertEquals(HitType.POPFLY, dto.getHitType());
         assertEquals(HitLocation.FIRST_BASE, dto.getHitLocation());
+
+        dto = parser.parse("Double Play: Foul Popfly: 2B (1B into Foul Terr.); Blackmon out at 1B/2B-P");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.POPFLY, dto.getHitType());
+        assertEquals(HitLocation.FIRST_BASE_FOUL_TERRITORY, dto.getHitLocation());
     }
 }
