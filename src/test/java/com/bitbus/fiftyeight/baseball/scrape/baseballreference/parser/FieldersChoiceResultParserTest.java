@@ -24,6 +24,7 @@ public class FieldersChoiceResultParserTest {
         assertTrue(parser.isParserFor("Fielder's Choice C; Grichuk out at 3B/C-3B"));
         assertTrue(parser
                 .isParserFor("Double Play: Fielder's Choice P unassisted; Revere out at Hm/P; Pennington out at 3B/P"));
+        assertTrue(parser.isParserFor("Fielder's Choice 1B; Pillar Scores; Barney to 2B"));
         assertFalse(parser.isParserFor("Bunt Groundout: 3B-1B (Short 3B Line)"));
         assertFalse(parser.isParserFor("Bunt Groundout: C-2B/Sacrifice (Front of Home); Descalso to 2B"));
         assertFalse(parser.isParserFor("Bunt Popfly: 1B (Short 1B Line)"));
@@ -103,6 +104,14 @@ public class FieldersChoiceResultParserTest {
         assertEquals(HitType.GROUND_BALL, dto.getHitType());
         assertEquals(HitLocation.PITCHER, dto.getHitLocation());
 
+        dto = parser.parse("Fielder's Choice 1B; Pillar Scores; Barney to 2B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(1, dto.getRunsBattedIn());
+        assertEquals(HitType.GROUND_BALL, dto.getHitType());
+        assertEquals(HitLocation.FIRST_BASE, dto.getHitLocation());
     }
 
 }

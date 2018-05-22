@@ -90,14 +90,14 @@ public class StrikeoutResultParserTest {
         assertNull(dto.getHitType());
         assertNull(dto.getHitLocation());
 
-        // dto = parser.parse("Strikeout");
-        // assertEquals(PlateAppearanceResult.STRIKEOUT_SWINGING, dto.getResult());
-        // assertFalse(dto.isHit());
-        // assertTrue(dto.isQualifiedAtBat());
-        // assertFalse(dto.isBallHitInPlay());
-        // assertEquals(0, dto.getRunsBattedIn());
-        // assertNull(dto.getHitType());
-        // assertNull(dto.getHitLocation());
+        dto = parser.parse("Strikeout");
+        assertEquals(PlateAppearanceResult.STRIKEOUT_SWINGING, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertFalse(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertNull(dto.getHitType());
+        assertNull(dto.getHitLocation());
 
     }
 }

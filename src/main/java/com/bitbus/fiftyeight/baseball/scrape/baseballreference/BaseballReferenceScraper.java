@@ -135,32 +135,45 @@ public class BaseballReferenceScraper {
         driver.switchTo().window(boxscoreTabHandle);
         wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.className("top_inning")));
 
+        try {
+            String description = driver.findElement(By.xpath("//div[@id='content']/h1")).getText();
+            log.info("Processing game details for {}", description);
 
-        String description = driver.findElement(By.xpath("//div[@id='content']/h1")).getText();
-        log.info("Processing game details for {}", description);
+            String[] descriptionComponents = description.split("\\sat\\s|\\sBox\\sScore,\\s");
+            if (descriptionComponents.length != 3) {
+                log.error(
+                        "The Box Score description could not be parsed as expected.  Any scraping could lead to unexpected results.");
+                throw new ScrapeException("Unexpected box score description format: " + description);
+            }
+            BaseballTeam awayTeam = teamNameMap.get(descriptionComponents[0]);
+            BaseballTeam homeTeam = teamNameMap.get(descriptionComponents[1]);
+            if (awayTeam == null || homeTeam == null) {
+                log.error("Could not map {} or {} to a persisted team.", descriptionComponents[0],
+                        descriptionComponents[1]);
+                throw new ScrapeException("Error identifying teams from description: " + description);
+            }
 
-        String[] descriptionComponents = description.split("\\sat\\s|\\sBox\\sScore,\\s");
-        if (descriptionComponents.length != 3) {
-            log.error(
-                    "The Box Score description could not be parsed as expected.  Any scraping could lead to unexpected results.");
-            throw new ScrapeException("Unexpected box score description format: " + description);
+            BaseballMatchup matchup =
+                    createMatchup(homeTeam, awayTeam, descriptionComponents[2], matchupBaseballReferenceId);
+
+            List<BaseballPlayer> playersInMatchup = createPlayers(matchup, mainTabHandle, boxscoreTabHandle);
+
+            createStarters(playersInMatchup, matchup);
+
+            createPlateAppearances(playersInMatchup);
+
+        } catch (ScrapeException | IllegalArgumentException e) {
+
+            if (!mainTabHandle.equals(driver.getWindowHandle())) {
+                log.warn("Caught an exception, switching back to the main tab");
+                driver.close();
+                driver.switchTo().window(mainTabHandle);
+            } else {
+                log.warn("Processing the boxscore was interrupted by an exception");
+            }
+            randomSleep();
+            throw e;
         }
-        BaseballTeam awayTeam = teamNameMap.get(descriptionComponents[0]);
-        BaseballTeam homeTeam = teamNameMap.get(descriptionComponents[1]);
-        if (awayTeam == null || homeTeam == null) {
-            log.error("Could not map {} or {} to a persisted team.", descriptionComponents[0],
-                    descriptionComponents[1]);
-            throw new ScrapeException("Error identifying teams from description: " + description);
-        }
-
-        BaseballMatchup matchup =
-                createMatchup(homeTeam, awayTeam, descriptionComponents[2], matchupBaseballReferenceId);
-
-        List<BaseballPlayer> playersInMatchup = createPlayers(matchup, mainTabHandle, boxscoreTabHandle);
-
-        createStarters(playersInMatchup, matchup);
-
-        createPlateAppearances(playersInMatchup);
 
         log.debug("Done scraping game data, closing tab.");
         randomSleep();

@@ -60,8 +60,10 @@ public class FieldersChoiceResultParser implements PlateAppearanceResultParser {
             int runsScored = StringUtils.countMatches(resultDescription, "Scores");
             rbis = 1;
             log.warn("Fielder's Choice with {} run(s) scored. This is unusual. Review", runsScored);
-            throw new WarningScrapeException("Fielder's Choice with " + runsScored
-                    + " run(s) scored. This is unusual. Review description: " + resultDescription);
+            if (runsScored > 1) {
+                throw new WarningScrapeException("Fielder's Choice with " + runsScored
+                        + " run(s) scored. This is unusual. Review description: " + resultDescription);
+            }
         } else {
             log.trace("No runs scored, this is normal");
         }

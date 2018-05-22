@@ -43,6 +43,7 @@ public class HitResultParserTest {
         assertTrue(parser.isParserFor("Ground-rule Double (Line Drive to Deep CF)"));
         assertTrue(parser.isParserFor("Ground-rule Double/Fan Interference; Escobar Scores"));
         assertTrue(parser.isParserFor("Ground-rule Double (Ground Ball); Napoli Scores"));
+        assertTrue(parser.isParserFor("Ground-rule Double (SS-3B Hole)"));
         assertTrue(parser.isParserFor("Single to P (SS-2B)"));
         assertTrue(parser.isParserFor("Single to SS/Bunt"));
         assertTrue(parser
@@ -56,6 +57,8 @@ public class HitResultParserTest {
         assertTrue(parser.isParserFor("Double (Line Drive to Deep LF); Maybin Scores"));
         assertTrue(parser.isParserFor("Single to C (Bunt Popup to Short 1B Line); Villar to 3B; Franklin to 2B"));
         assertTrue(parser.isParserFor("Single to 2B/Bunt; Wong to 2B"));
+        assertTrue(parser.isParserFor(
+                "Single to RF (Line Drive); Zimmer Scores/unER; Brantley Scores/Adv on E9 (throw)/unER/No RBI; Ramirez to 3B/Adv on throw"));
     }
 
     @Test
@@ -142,15 +145,24 @@ public class HitResultParserTest {
         // assertNull(dto.getHitLocation());
         // assertEquals(0, dto.getRunsBattedIn());
 
-        // dto = parser.parse("Single to LF (Line Drive to LF-CF); Castro Scores/unER/Adv on E7/No
-        // RBI; Judge to 3B");
-        // assertTrue(dto.isHit());
-        // assertTrue(dto.isQualifiedAtBat());
-        // assertTrue(dto.isBallHitInPlay());
-        // assertEquals(PlateAppearanceResult.SINGLE, dto.getResult());
-        // assertEquals(HitType.LINE_DRIVE, dto.getHitType());
-        // assertEquals(dto.getHitLocation(), HitLocation.LEFT_FIELD_CENTER_FIELD);
-        // assertEquals(0, dto.getRunsBattedIn());
+        dto = parser.parse("Single to LF (Line Drive to LF-CF); Castro Scores/unER/Adv on E7/No RBI; Judge to 3B");
+        assertTrue(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(PlateAppearanceResult.SINGLE, dto.getResult());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertEquals(dto.getHitLocation(), HitLocation.LEFT_FIELD_CENTER_FIELD);
+        assertEquals(0, dto.getRunsBattedIn());
+
+        dto = parser.parse(
+                "Single to RF (Line Drive); Zimmer Scores/unER; Brantley Scores/Adv on E9 (throw)/unER/No RBI; Ramirez to 3B/Adv on throw");
+        assertTrue(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(PlateAppearanceResult.SINGLE, dto.getResult());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertEquals(dto.getHitLocation(), HitLocation.RIGHT_FIELD);
+        assertEquals(1, dto.getRunsBattedIn());
 
         dto = parser.parse("Single to C (Bunt Popup to Short 1B Line); Villar to 3B; Franklin to 2B");
         assertTrue(dto.isHit());
@@ -208,24 +220,6 @@ public class HitResultParserTest {
         assertEquals(HitType.LINE_DRIVE, dto.getHitType());
         assertEquals(HitLocation.DEEP_LEFT_FIELD_LINE, dto.getHitLocation());
         assertEquals(0, dto.getRunsBattedIn());
-
-        dto = parser.parse("Ground-rule Double/Fan Interference; Escobar Scores");
-        assertTrue(dto.isHit());
-        assertTrue(dto.isQualifiedAtBat());
-        assertTrue(dto.isBallHitInPlay());
-        assertEquals(PlateAppearanceResult.DOUBLE, dto.getResult());
-        assertNull(dto.getHitType());
-        assertNull(dto.getHitLocation());
-        assertEquals(1, dto.getRunsBattedIn());
-
-        // dto = parser.parse("Ground-rule Double (Ground Ball); Napoli Scores");
-        // assertTrue(dto.isHit());
-        // assertTrue(dto.isQualifiedAtBat());
-        // assertTrue(dto.isBallHitInPlay());
-        // assertEquals(PlateAppearanceResult.DOUBLE, dto.getResult());
-        // assertNull(dto.getHitType());
-        // assertNull(dto.getHitLocation());
-        // assertEquals(1, dto.getRunsBattedIn());
 
         dto = parser.parse("Double/Fan Interference (Ground Ball); Miller Scores/unER");
         assertTrue(dto.isHit());
@@ -326,6 +320,33 @@ public class HitResultParserTest {
         assertEquals(HitType.LINE_DRIVE, dto.getHitType());
         assertEquals(HitLocation.DEEP_CENTER_FIELD, dto.getHitLocation());
         assertEquals(0, dto.getRunsBattedIn());
+
+        dto = parser.parse("Ground-rule Double/Fan Interference; Escobar Scores");
+        assertTrue(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(PlateAppearanceResult.DOUBLE, dto.getResult());
+        assertNull(dto.getHitType());
+        assertNull(dto.getHitLocation());
+        assertEquals(1, dto.getRunsBattedIn());
+
+        // dto = parser.parse("Ground-rule Double (Ground Ball); Napoli Scores");
+        // assertTrue(dto.isHit());
+        // assertTrue(dto.isQualifiedAtBat());
+        // assertTrue(dto.isBallHitInPlay());
+        // assertEquals(PlateAppearanceResult.DOUBLE, dto.getResult());
+        // assertNull(dto.getHitType());
+        // assertNull(dto.getHitLocation());
+        // assertEquals(1, dto.getRunsBattedIn());
+
+        // dto = parser.parse("Ground-rule Double (SS-3B Hole)");
+        // assertTrue(dto.isHit());
+        // assertTrue(dto.isQualifiedAtBat());
+        // assertTrue(dto.isBallHitInPlay());
+        // assertEquals(PlateAppearanceResult.DOUBLE, dto.getResult());
+        // assertNull(dto.getHitType());
+        // assertNull(dto.getHitLocation());
+        // assertEquals(0, dto.getRunsBattedIn());
     }
 
 }

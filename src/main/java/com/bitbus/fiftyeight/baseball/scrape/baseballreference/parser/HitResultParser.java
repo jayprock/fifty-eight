@@ -87,9 +87,10 @@ public class HitResultParser implements PlateAppearanceResultParser {
                         log.warn(
                                 "Found ground-rule double with an unusual format. Review to make sure this was handled correctly. [{}]",
                                 resultDescription);
-                        throw new WarningScrapeException(
-                                "Found ground-rule double with an unusual format. Review to make sure this was handled correctly: "
-                                        + resultDescription);
+                        // throw new WarningScrapeException(
+                        // "Found ground-rule double with an unusual format. Review to make sure
+                        // this was handled correctly: "
+                        // + resultDescription);
                     } else if (resultDescription.contains("Fan Interference")
                             || result == PlateAppearanceResult.HOMERUN) {
                         hitType = HitType.findByDisplayName(hitDetailParts[0]);
@@ -135,9 +136,6 @@ public class HitResultParser implements PlateAppearanceResultParser {
         if (runnersScored > 0 && noRbiCount > 0) {
             log.warn("Found runs scored that do not count as RBIs, removing them from the RBI count");
             runnersScored = Math.max(runnersScored - noRbiCount, 0);
-            throw new WarningScrapeException(
-                    "Found runs scored that do not count as RBIs, make sure this is handled correctly. Description: "
-                            + resultDescription);
         }
         int runsBattedIn = (result == PlateAppearanceResult.HOMERUN) ? runnersScored + 1 : runnersScored;
         log.trace("RBIs: {}", runsBattedIn);

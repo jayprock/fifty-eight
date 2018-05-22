@@ -40,8 +40,8 @@ public class FlyBallResultParser implements PlateAppearanceResultParser {
         HitLocation hitLocation;
         String[] flyBallDescriptionParts = resultDescription.split(";")[0].split("\\(|\\)");
         if (flyBallDescriptionParts.length == 1) {
-            hitLocation =
-                    HitLocation.findByDisplayName(resultDescription.replace("Double Play: ", "").split(":\\s|;|/")[1]);
+            hitLocation = HitLocation
+                    .findByDisplayName(resultDescription.replace("Double Play: ", "").split(":\\s|;|/|-")[1]);
         } else {
             hitLocation = HitLocation.findByDisplayName(flyBallDescriptionParts[1].replace(" Hole", ""));
         }
