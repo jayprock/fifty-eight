@@ -32,6 +32,11 @@ public class GroundoutResultParserTest {
         assertTrue(parser.isParserFor("Double Play: Groundout: 1B; Cardullo out at Hm/1B-C; Freeland to 2B"));
         assertTrue(parser.isParserFor("Groundout: 1B-SS/Forceout at 2B; Romine to 2B/Adv on E6 (throw)"));
         assertTrue(parser.isParserFor("Ground Ball Triple Play: SS-2B-1B (Deep SS-3B Hole)"));
+        assertTrue(parser.isParserFor("Ground Ball Double Play: SS-2B-1B; Dietrich Scores/No RBI"));
+        assertTrue(parser.isParserFor("Ground Ball Double Play: 2B-SS-1B (2B-1B); Cozart Scores/No RBI; Votto to 3B"));
+        assertTrue(parser.isParserFor(
+                "Groundout: SS-2B/Forceout at 2B; Bautista Scores; Donaldson Scores/unER/Adv on E4 (throw)/No RBI"));
+
         assertFalse(parser.isParserFor("Ground Ball Double Play: Bunt 1B-2B-SS"));
         assertFalse(parser.isParserFor("Popfly: 3B"));
         assertFalse(parser.isParserFor("Foul Popfly: C (Behind Home)"));
@@ -184,6 +189,34 @@ public class GroundoutResultParserTest {
         assertEquals(0, dto.getRunsBattedIn());
         assertEquals(HitType.GROUND_BALL, dto.getHitType());
         assertEquals(HitLocation.DEEP_THIRD_BASE_SHORT_STOP, dto.getHitLocation());
+
+        dto = parser.parse("Ground Ball Double Play: SS-2B-1B; Dietrich Scores/No RBI");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.GROUND_BALL, dto.getHitType());
+        assertEquals(HitLocation.SHORT_STOP, dto.getHitLocation());
+
+        dto = parser.parse("Ground Ball Double Play: 2B-SS-1B (2B-1B); Cozart Scores/No RBI; Votto to 3B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.GROUND_BALL, dto.getHitType());
+        assertEquals(HitLocation.SECOND_BASE_FIRST_BASE, dto.getHitLocation());
+
+        dto = parser.parse(
+                "Groundout: SS-2B/Forceout at 2B; Bautista Scores; Donaldson Scores/unER/Adv on E4 (throw)/No RBI");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(1, dto.getRunsBattedIn());
+        assertEquals(HitType.GROUND_BALL, dto.getHitType());
+        assertEquals(HitLocation.SHORT_STOP, dto.getHitLocation());
     }
 
 }

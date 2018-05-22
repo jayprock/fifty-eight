@@ -55,6 +55,7 @@ public class GroundoutResultParser implements PlateAppearanceResultParser {
             if (resultDescription.contains("Ground Ball Double Play:")) {
                 disallowRBI = true;
             } else if (resultDescription.startsWith("Double Play:")) {
+                disallowRBI = true;
                 indexOffset++;
             }
             String hitLocationValue = resultDescription.split(":\\s")[1 + indexOffset].split("\\s|-|;")[0];
@@ -66,19 +67,18 @@ public class GroundoutResultParser implements PlateAppearanceResultParser {
 
         log.trace("Checking for an RBI");
         int runsScored = StringUtils.countMatches(resultDescription, "Scores");
+        int runsScoredNotRBIs = StringUtils.countMatches(resultDescription, "No RBI");
         if (runsScored > 0 && (resultDescription.contains("No RBI") || resultDescription.contains("Error"))) {
             log.warn("Found groundout description that may not be handled correctly in RBI scenario. Review!");
-            throw new WarningScrapeException(
-                    "Found groundout description that may not be handled correctly in RBI scenario. Review description: "
-                            + resultDescription);
         }
-        if (runsScored > 1) {
+        int rbis = Math.max(0, runsScored - runsScoredNotRBIs);
+        if (rbis > 1) {
             log.warn("More than 1 run scored on a groundout. This probably is not handled correctly!");
             throw new WarningScrapeException(
                     "More than 1 run scored on a groundout. This probably is not handled correctly! Review description: "
                             + resultDescription);
         }
-        int rbis = disallowRBI ? 0 : runsScored;
+        rbis = disallowRBI ? 0 : rbis;
         log.trace("RBIs assessed: " + rbis);
 
         return PlateAppearanceResultDTO.builder() //
