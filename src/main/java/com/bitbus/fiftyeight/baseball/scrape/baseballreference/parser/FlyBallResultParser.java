@@ -47,50 +47,41 @@ public class FlyBallResultParser implements PlateAppearanceResultParser {
         }
         log.trace("Fly ball location: {}", hitLocation);
 
-        log.trace("Assessing whether the fly ball was a sacrifice");
-        boolean sacrifice = false;
+        log.trace("Assessing the number of runs scored");
+        boolean qualifiedAB = true;
+        int rbis = 0;
         int runsScored = StringUtils.countMatches(resultDescription, "Scores");
         if (runsScored > 0) {
             if (resultDescription.contains("Sacrifice Fly")) {
-                sacrifice = true;
+                qualifiedAB = false;
             } else {
-                log.warn("A run scored on a flyball, but did not find \"Sacrifice Fly\", is something wrong?");
-                throw new WarningScrapeException(
-                        "A run scored on a flyball, but did not find \"Sacrifice Fly\", is something wrong? Description: "
-                                + resultDescription);
+                log.warn("A run scored on a flyball [{}], but did not find \"Sacrifice Fly\", this is unusual",
+                        resultDescription);
             }
-            if (runsScored > 1) {
-                log.warn(
-                        "Flyball scenario with {} runs scored. Why are there more than 1 runs? More than 1 RBI never granted on sacrifice.",
-                        runsScored);
+            int runsScoreDiscounted = Math.max(StringUtils.countMatches(resultDescription, "No RBI"),
+                    Math.max(StringUtils.countMatches(resultDescription, "Scores/Adv on E"),
+                            StringUtils.countMatches(resultDescription, "Scores/unER/Adv on E")));
+            rbis = Math.max(0, runsScored - runsScoreDiscounted);
+            if (rbis > 1) {
+                log.warn("Flyball scenario with {} RBIs. How is there more than 1 RBI?", runsScored);
                 throw new WarningScrapeException(
-                        "Flyball scenario with {} runs scored. Why are there more than 1 runs? More than 1 RBI never granted on sacrifice. Review description: "
+                        "Flyball scenario with {} RBIs. Why are there more than 1 RBIs? Review description: "
                                 + resultDescription);
             }
         }
-        log.trace("Flyball is a sacrifice finding: " + sacrifice);
+        PlateAppearanceResult result =
+                qualifiedAB ? PlateAppearanceResult.BALL_IN_PLAY_OUT : PlateAppearanceResult.SAC_FLY;
+        log.trace("Flyball parsed result type: " + result);
 
         log.trace("Successfully parsed the flyball result description");
-        if (sacrifice) {
-            return PlateAppearanceResultDTO.builder() //
-                    .result(PlateAppearanceResult.SAC_FLY) //
-                    .hitLocation(hitLocation) //
-                    .hitType(HitType.FLYBALL) //
-                    .qualifiedAtBat(false) //
-                    .ballHitInPlay(true) //
-                    .runsBattedIn(1) //
-                    .build();
-        } else {
-            return PlateAppearanceResultDTO.builder() //
-                    .result(PlateAppearanceResult.BALL_IN_PLAY_OUT) //
-                    .hitLocation(hitLocation) //
-                    .hitType(HitType.FLYBALL) //
-                    .qualifiedAtBat(true) //
-                    .ballHitInPlay(true) //
-                    .runsBattedIn(0) //
-                    .build();
-        }
-
+        return PlateAppearanceResultDTO.builder() //
+                .result(result) //
+                .hitLocation(hitLocation) //
+                .hitType(HitType.FLYBALL) //
+                .qualifiedAtBat(qualifiedAB) //
+                .ballHitInPlay(true) //
+                .runsBattedIn(rbis) //
+                .build();
     }
 
 }

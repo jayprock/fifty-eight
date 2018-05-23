@@ -31,6 +31,7 @@ public class FlyBallResultParserTest {
         assertTrue(
                 parser.isParserFor("Double Play: Foul Flyball: LF (LF into Foul Terr.); Benintendi out at 2B/LF-2B"));
         assertTrue(parser.isParserFor("Flyball: RF-P/Forceout at 2B"));
+        assertTrue(parser.isParserFor("Flyball: LF-2B/Forceout at 2B; Slater Scores"));
     }
 
     @Test
@@ -114,15 +115,14 @@ public class FlyBallResultParserTest {
         assertEquals(HitType.FLYBALL, dto.getHitType());
         assertEquals(HitLocation.DEEP_THIRD_BASE_SHORT_STOP, dto.getHitLocation());
 
-        // dto = parser.parse("Flyball: RF; Mercer Scores/unER/Adv on E9 (throw); Marte to 3B;
-        // McCutchen to 2B");
-        // assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
-        // assertFalse(dto.isHit());
-        // assertTrue(dto.isQualifiedAtBat());
-        // assertTrue(dto.isBallHitInPlay());
-        // assertEquals(0, dto.getRunsBattedIn());
-        // assertEquals(HitType.FLYBALL, dto.getHitType());
-        // assertEquals(HitLocation.RIGHT_FIELD, dto.getHitLocation());
+        dto = parser.parse("Flyball: RF; Mercer Scores/unER/Adv on E9 (throw); Marte to 3B; McCutchen to 2B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
+        assertEquals(HitType.FLYBALL, dto.getHitType());
+        assertEquals(HitLocation.RIGHT_FIELD, dto.getHitLocation());
 
         dto = parser.parse("Double Play: Flyball: LF; Altherr out at Hm/LF-C");
         assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
@@ -150,5 +150,14 @@ public class FlyBallResultParserTest {
         assertEquals(0, dto.getRunsBattedIn());
         assertEquals(HitType.FLYBALL, dto.getHitType());
         assertEquals(HitLocation.RIGHT_FIELD, dto.getHitLocation());
+
+        dto = parser.parse("Flyball: LF-2B/Forceout at 2B; Slater Scores");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(1, dto.getRunsBattedIn());
+        assertEquals(HitType.FLYBALL, dto.getHitType());
+        assertEquals(HitLocation.LEFT_FIELD, dto.getHitLocation());
     }
 }
