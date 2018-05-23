@@ -11,7 +11,6 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
 import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
-import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -48,13 +47,17 @@ public class PopflyResultParser implements PlateAppearanceResultParser {
         }
         log.trace("Popfly location: {}", hitLocation);
 
+        boolean qualifiedAB = true;
+        int rbis = 0;
         log.trace("Determining if the popfly included runs scored. This would be an unexpected situation");
         int runsScored = StringUtils.countMatches(resultDescription, "Scores");
         if (runsScored > 0) {
             log.warn("Run(s) scored during a popfly. This is unexpected and potentially not handled. Review!");
-            throw new WarningScrapeException(
-                    "Run(s) scored during a popfly. This is unexpected and potentially not handled. Review description: "
-                            + resultDescription);
+            if (resultDescription.contains("Sacrifice Fly")) {
+                qualifiedAB = false;
+            }
+            int runsScoredDiscounted = StringUtils.countMatches(resultDescription, "No RBI");
+            rbis = Math.max(0, runsScored - runsScoredDiscounted);
         } else {
             log.trace("No runs were scored, this is the expected result");
         }
@@ -64,9 +67,9 @@ public class PopflyResultParser implements PlateAppearanceResultParser {
                 .result(PlateAppearanceResult.BALL_IN_PLAY_OUT) //
                 .hitLocation(hitLocation) //
                 .hitType(HitType.POPFLY) //
-                .qualifiedAtBat(true) //
+                .qualifiedAtBat(qualifiedAB) //
                 .ballHitInPlay(true) //
-                .runsBattedIn(0) //
+                .runsBattedIn(rbis) //
                 .build();
     }
 
