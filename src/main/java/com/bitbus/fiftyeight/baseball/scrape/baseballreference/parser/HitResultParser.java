@@ -11,7 +11,6 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
 import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
-import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -78,19 +77,12 @@ public class HitResultParser implements PlateAppearanceResultParser {
                         skipHitLocation = true;
                         log.warn(
                                 "A runner was struck by the ball. This is very unusual and the format is not certain. Review!");
-                        throw new WarningScrapeException(
-                                "A runner was struck by the ball. This is unusual and the format should be reviewed: Result description: "
-                                        + resultDescription);
                     } else if (groundRuleDouble) {
                         hitType = null;
                         skipHitLocation = true;
                         log.warn(
                                 "Found ground-rule double with an unusual format. Review to make sure this was handled correctly. [{}]",
                                 resultDescription);
-                        // throw new WarningScrapeException(
-                        // "Found ground-rule double with an unusual format. Review to make sure
-                        // this was handled correctly: "
-                        // + resultDescription);
                     } else if (resultDescription.contains("Fan Interference")
                             || result == PlateAppearanceResult.HOMERUN) {
                         hitType = HitType.findByDisplayName(hitDetailParts[0]);

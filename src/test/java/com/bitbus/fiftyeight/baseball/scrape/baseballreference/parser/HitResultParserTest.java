@@ -48,6 +48,8 @@ public class HitResultParserTest {
         assertTrue(parser.isParserFor("Single to SS/Bunt"));
         assertTrue(parser
                 .isParserFor("Single/runner struck by batted ball and is out (Line Drive); Stanton out at 2B/2B"));
+        assertTrue(
+                parser.isParserFor("Single/runner struck by batted ball and is out (Line Drive); De Aza out at 2B/2B"));
         assertTrue(parser.isParserFor("Inside-the-park Home Run to CF (Fly Ball to Deep LF-CF)"));
         assertTrue(parser.isParserFor("Double/Fan Interference (Ground Ball); Miller Scores/unER"));
         assertTrue(parser
@@ -137,15 +139,23 @@ public class HitResultParserTest {
         assertEquals(HitLocation.SHORT_STOP, dto.getHitLocation());
         assertEquals(0, dto.getRunsBattedIn());
 
-        // dto = parser.parse("Single/runner struck by batted ball and is out (Line Drive); Stanton
-        // out at 2B/2B");
-        // assertTrue(dto.isHit());
-        // assertTrue(dto.isQualifiedAtBat());
-        // assertTrue(dto.isBallHitInPlay());
-        // assertEquals(PlateAppearanceResult.SINGLE, dto.getResult());
-        // assertEquals(HitType.LINE_DRIVE, dto.getHitType());
-        // assertNull(dto.getHitLocation());
-        // assertEquals(0, dto.getRunsBattedIn());
+        dto = parser.parse("Single/runner struck by batted ball and is out (Line Drive); Stanton out at 2B/2B");
+        assertTrue(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(PlateAppearanceResult.SINGLE, dto.getResult());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertNull(dto.getHitLocation());
+        assertEquals(0, dto.getRunsBattedIn());
+
+        dto = parser.parse("Single/runner struck by batted ball and is out (Line Drive); De Aza out at 2B/2B");
+        assertTrue(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(PlateAppearanceResult.SINGLE, dto.getResult());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertNull(dto.getHitLocation());
+        assertEquals(0, dto.getRunsBattedIn());
 
         dto = parser.parse("Single to LF (Line Drive to LF-CF); Castro Scores/unER/Adv on E7/No RBI; Judge to 3B");
         assertTrue(dto.isHit());
