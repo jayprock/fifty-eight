@@ -12,7 +12,6 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
 import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
-import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -66,17 +65,16 @@ public class GroundoutResultParser implements PlateAppearanceResultParser {
         log.trace("Location of groundout: " + hitLocation);
 
         log.trace("Checking for an RBI");
+        int rbis = 0;
         int runsScored = StringUtils.countMatches(resultDescription, "Scores");
-        int runsScoredNotRBIs = StringUtils.countMatches(resultDescription, "No RBI");
-        if (runsScored > 0 && (resultDescription.contains("No RBI") || resultDescription.contains("Error"))) {
-            log.warn("Found groundout description that may not be handled correctly in RBI scenario. Review!");
+        if (runsScored > 0) {
+            int runsScoredNotRBIs = Math.max(StringUtils.countMatches(resultDescription, "No RBI"),
+                    StringUtils.countMatches(resultDescription, "Scores/Adv on E"));
+            rbis = Math.max(0, runsScored - runsScoredNotRBIs);
         }
-        int rbis = Math.max(0, runsScored - runsScoredNotRBIs);
         if (rbis > 1) {
-            log.warn("More than 1 run scored on a groundout. This might not be handled correctly!");
-            throw new WarningScrapeException(
-                    "More than 1 run scored on a groundout. This might not be handled correctly! Review description: "
-                            + resultDescription);
+            log.warn("More than 1 run scored on a groundout [{}]. This might not be handled correctly!",
+                    resultDescription);
         }
         rbis = disallowRBI ? 0 : rbis;
         log.trace("RBIs assessed: " + rbis);
