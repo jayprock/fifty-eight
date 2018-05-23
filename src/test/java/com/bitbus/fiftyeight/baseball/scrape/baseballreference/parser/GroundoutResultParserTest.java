@@ -11,6 +11,7 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
 import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
+import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 public class GroundoutResultParserTest {
 
@@ -36,6 +37,7 @@ public class GroundoutResultParserTest {
         assertTrue(parser.isParserFor("Ground Ball Double Play: 2B-SS-1B (2B-1B); Cozart Scores/No RBI; Votto to 3B"));
         assertTrue(parser.isParserFor(
                 "Groundout: SS-2B/Forceout at 2B; Bautista Scores; Donaldson Scores/unER/Adv on E4 (throw)/No RBI"));
+        assertTrue(parser.isParserFor("Groundout: SS-2B/Forceout at 2B; DeJong Scores/unER; Fowler Scores/unER"));
 
         assertFalse(parser.isParserFor("Ground Ball Double Play: Bunt 1B-2B-SS"));
         assertFalse(parser.isParserFor("Popfly: 3B"));
@@ -217,6 +219,20 @@ public class GroundoutResultParserTest {
         assertEquals(1, dto.getRunsBattedIn());
         assertEquals(HitType.GROUND_BALL, dto.getHitType());
         assertEquals(HitLocation.SHORT_STOP, dto.getHitLocation());
+
+        try {
+            // TODO - drop warning exception
+            dto = parser.parse("Groundout: SS-2B/Forceout at 2B; DeJong Scores/unER; Fowler Scores/unER");
+            assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+            assertFalse(dto.isHit());
+            assertTrue(dto.isQualifiedAtBat());
+            assertTrue(dto.isBallHitInPlay());
+            assertEquals(2, dto.getRunsBattedIn());
+            assertEquals(HitType.GROUND_BALL, dto.getHitType());
+            assertEquals(HitLocation.SHORT_STOP, dto.getHitLocation());
+        } catch (WarningScrapeException e) {
+
+        }
     }
 
 }

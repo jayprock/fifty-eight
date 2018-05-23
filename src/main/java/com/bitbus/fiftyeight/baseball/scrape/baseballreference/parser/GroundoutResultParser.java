@@ -73,9 +73,9 @@ public class GroundoutResultParser implements PlateAppearanceResultParser {
         }
         int rbis = Math.max(0, runsScored - runsScoredNotRBIs);
         if (rbis > 1) {
-            log.warn("More than 1 run scored on a groundout. This probably is not handled correctly!");
+            log.warn("More than 1 run scored on a groundout. This might not be handled correctly!");
             throw new WarningScrapeException(
-                    "More than 1 run scored on a groundout. This probably is not handled correctly! Review description: "
+                    "More than 1 run scored on a groundout. This might not be handled correctly! Review description: "
                             + resultDescription);
         }
         rbis = disallowRBI ? 0 : rbis;
