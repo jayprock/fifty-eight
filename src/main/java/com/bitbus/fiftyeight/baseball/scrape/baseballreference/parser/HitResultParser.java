@@ -109,7 +109,7 @@ public class HitResultParser implements PlateAppearanceResultParser {
                 if (hitDetailParts.length > 1) {
                     hitLocation = HitLocation.findByDisplayName(hitDetailParts[1].replace(" Hole", ""));
                 } else if (summaryParts.length > 1) {
-                    hitLocation = HitLocation.findByDisplayName(summaryParts[1].replace(" Hole", ""));
+                    hitLocation = HitLocation.findByDisplayName(summaryParts[1].split("/")[0].replace(" Hole", ""));
                 } else {
                     hitLocation = HitLocation.findByDisplayName(hitDetailParts[0].replace(" Hole", ""));
                 }
@@ -121,7 +121,7 @@ public class HitResultParser implements PlateAppearanceResultParser {
                 hitLocation = HitLocation.findByDisplayName(hitDetailsParts.replace("/Bunt", ""));
             } else {
                 hitType = null;
-                hitLocation = HitLocation.findByDisplayName(hitDetailsParts);
+                hitLocation = HitLocation.findByDisplayName(hitDetailsParts.split("/")[0]);
             }
         } else {
             hitLocation = null;

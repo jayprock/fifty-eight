@@ -59,6 +59,8 @@ public class HitResultParserTest {
         assertTrue(parser.isParserFor("Single to 2B/Bunt; Wong to 2B"));
         assertTrue(parser.isParserFor(
                 "Single to RF (Line Drive); Zimmer Scores/unER; Brantley Scores/Adv on E9 (throw)/unER/No RBI; Ramirez to 3B/Adv on throw"));
+        assertTrue(parser.isParserFor("Double to LF/Fan Interference (Ground Ball)"));
+        assertTrue(parser.isParserFor("Double to RF/Fan Interference; Urshela Scores"));
     }
 
     @Test
@@ -181,6 +183,7 @@ public class HitResultParserTest {
         assertEquals(HitType.BUNT, dto.getHitType());
         assertEquals(HitLocation.SECOND_BASE, dto.getHitLocation());
         assertEquals(0, dto.getRunsBattedIn());
+
     }
 
     @Test
@@ -246,6 +249,24 @@ public class HitResultParserTest {
         assertEquals(PlateAppearanceResult.DOUBLE, dto.getResult());
         assertEquals(dto.getHitType(), HitType.LINE_DRIVE);
         assertEquals(dto.getHitLocation(), HitLocation.DEEP_LEFT_FIELD);
+        assertEquals(1, dto.getRunsBattedIn());
+
+        dto = parser.parse("Double to LF/Fan Interference (Ground Ball)");
+        assertTrue(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(PlateAppearanceResult.DOUBLE, dto.getResult());
+        assertEquals(HitType.GROUND_BALL, dto.getHitType());
+        assertEquals(HitLocation.LEFT_FIELD, dto.getHitLocation());
+        assertEquals(0, dto.getRunsBattedIn());
+
+        dto = parser.parse("Double to RF/Fan Interference; Urshela Scores");
+        assertTrue(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(PlateAppearanceResult.DOUBLE, dto.getResult());
+        assertNull(dto.getHitType());
+        assertEquals(HitLocation.RIGHT_FIELD, dto.getHitLocation());
         assertEquals(1, dto.getRunsBattedIn());
     }
 
