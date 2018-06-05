@@ -31,6 +31,8 @@ public class LineoutResultParserTest {
                 .isParserFor("Double Play: Foul Lineout: 1B unassisted (1B into Foul Terr.); Hicks out at 1B/1B"));
         assertTrue(parser.isParserFor("Lineout: LF; Goldschmidt to 3B/Adv on E7 (throw)"));
         assertTrue(parser.isParserFor("Line Drive Double Play: P; Hosmer out at 2B/P-2B"));
+        assertTrue(parser
+                .isParserFor("Lineout: RF/Sacrifice Fly (Deep RF); Castro Scores; Headley Scores/Adv on E4 (throw)"));
 
 
         assertFalse(parser.isParserFor("Flyball: LF/Sacrifice Fly (Deep LF); Gordon Scores/unER"));
@@ -159,5 +161,14 @@ public class LineoutResultParserTest {
         assertEquals(0, dto.getRunsBattedIn());
         assertEquals(HitType.LINE_DRIVE, dto.getHitType());
         assertEquals(HitLocation.PITCHER, dto.getHitLocation());
+
+        dto = parser.parse("Lineout: RF/Sacrifice Fly (Deep RF); Castro Scores; Headley Scores/Adv on E4 (throw)");
+        assertEquals(PlateAppearanceResult.SAC_FLY, dto.getResult());
+        assertFalse(dto.isHit());
+        assertFalse(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(1, dto.getRunsBattedIn());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertEquals(HitLocation.DEEP_RIGHT_FIELD, dto.getHitLocation());
     }
 }

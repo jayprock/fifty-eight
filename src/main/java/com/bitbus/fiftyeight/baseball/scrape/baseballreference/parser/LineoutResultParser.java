@@ -54,48 +54,40 @@ public class LineoutResultParser implements PlateAppearanceResultParser {
         log.trace("Lineout location: {}", hitLocation);
 
         log.trace("Determining if the lineout was a sacrifice");
-        boolean sacrifice = false;
+        int rbis = 0;
+        PlateAppearanceResult result;
         int runsScored = StringUtils.countMatches(resultDescription, "Scores");
         if (runsScored > 0) {
             if (resultDescription.contains("Sacrifice Fly")) {
-                sacrifice = true;
+                result = PlateAppearanceResult.SAC_FLY;
             } else {
                 log.warn("A run scored on a lineout, but did not find \"Sacrifice Fly\", is something wrong?");
                 throw new WarningScrapeException(
                         "A run scored on a lineout, but did not find \"Sacrifice Fly\", is something wrong? Review description: "
                                 + resultDescription);
             }
+            int runsScoredNotRBIs = Math.max(StringUtils.countMatches(resultDescription, "No RBI"),
+                    StringUtils.countMatches(resultDescription, "Scores/Adv on E"));
+            rbis = Math.max(0, runsScored - runsScoredNotRBIs);
             if (runsScored > 1) {
-                log.warn(
+                log.debug(
                         "Lineout scenario with {} runs scored. Why are there more than 1 runs? More than 1 RBI never granted on sacrifice.",
                         runsScored);
-                throw new WarningScrapeException("Lineout scenario with " + runsScored
-                        + " runs scored. Why are there more than 1 runs? More than 1 RBI never granted on sacrifice. Make sure this is handled correctly. Result description: "
-                        + resultDescription);
             }
+        } else {
+            result = PlateAppearanceResult.BALL_IN_PLAY_OUT;
         }
-        log.trace("Lineout sacrifice assessment: " + sacrifice);
+        log.trace("Result assessment: " + result);
 
         log.trace("Successfully parsed the lineout result description");
-        if (sacrifice) {
-            return PlateAppearanceResultDTO.builder() //
-                    .result(PlateAppearanceResult.SAC_FLY) //
-                    .hitLocation(hitLocation) //
-                    .hitType(HitType.LINE_DRIVE) //
-                    .qualifiedAtBat(false) //
-                    .ballHitInPlay(true) //
-                    .runsBattedIn(1) //
-                    .build();
-        } else {
-            return PlateAppearanceResultDTO.builder() //
-                    .result(PlateAppearanceResult.BALL_IN_PLAY_OUT) //
-                    .hitLocation(hitLocation) //
-                    .hitType(HitType.LINE_DRIVE) //
-                    .qualifiedAtBat(true) //
-                    .ballHitInPlay(true) //
-                    .runsBattedIn(0) //
-                    .build();
-        }
+        return PlateAppearanceResultDTO.builder() //
+                .result(result) //
+                .hitLocation(hitLocation) //
+                .hitType(HitType.LINE_DRIVE) //
+                .qualifiedAtBat(result == PlateAppearanceResult.BALL_IN_PLAY_OUT) //
+                .ballHitInPlay(true) //
+                .runsBattedIn(rbis) //
+                .build();
     }
 
 }

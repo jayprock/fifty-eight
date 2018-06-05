@@ -56,7 +56,8 @@ public class PopflyResultParser implements PlateAppearanceResultParser {
             if (resultDescription.contains("Sacrifice Fly")) {
                 qualifiedAB = false;
             }
-            int runsScoredDiscounted = StringUtils.countMatches(resultDescription, "No RBI");
+            int runsScoredDiscounted = Math.max(StringUtils.countMatches(resultDescription, "No RBI"),
+                    StringUtils.countMatches(resultDescription, "Scores/Adv on E"));
             rbis = Math.max(0, runsScored - runsScoredDiscounted);
         } else {
             log.trace("No runs were scored, this is the expected result");
