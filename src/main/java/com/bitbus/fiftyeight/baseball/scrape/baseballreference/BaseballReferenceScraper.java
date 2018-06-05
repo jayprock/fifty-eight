@@ -160,7 +160,7 @@ public class BaseballReferenceScraper {
 
             createStarters(playersInMatchup, matchup);
 
-            createPlateAppearances(playersInMatchup);
+            createPlateAppearances(playersInMatchup, matchup);
 
         } catch (ScrapeException | IllegalArgumentException e) {
 
@@ -364,7 +364,7 @@ public class BaseballReferenceScraper {
         baseballGameStarterService.save(startingPlayerDTOs, matchup);
     }
 
-    private void createPlateAppearances(List<BaseballPlayer> players) throws ScrapeException {
+    private void createPlateAppearances(List<BaseballPlayer> players, BaseballMatchup matchup) throws ScrapeException {
         log.debug("Processing the matchup play by play data");
         WebElement viewPitchesButton = driver.findElement(By.xpath("//span[text()='View Pitches']/.."));
         actions.moveToElement(viewPitchesButton).perform();
@@ -480,6 +480,7 @@ public class BaseballReferenceScraper {
                     .mapToObj(c -> new PitchResult((char) c, plateAppearance)) //
                     .collect(Collectors.toList());
             plateAppearance.setPitchResults(pitchResults);
+            log.trace("Found {} pitch results: {}", pitchResults.size(), pitchResults);
 
             log.trace("Get the resulting outs and runs scored from the plate appearance");
             String runsScoredOutsMadeCode = columns.get(4).getText();
@@ -490,6 +491,7 @@ public class BaseballReferenceScraper {
 
             log.trace("Assessing the batter");
             String batterName = columns.get(6).getText();
+            log.trace("Finding existing player that maps to batter name {}", batterName);
             BaseballPlayer batter = players.stream() //
                     .filter(player -> nameCollator.compare(player.getFullName(), batterName) == 0) //
                     .findFirst() //
@@ -503,6 +505,10 @@ public class BaseballReferenceScraper {
                     .findFirst() //
                     .get();
             plateAppearance.setPitcher(pitcher);
+
+            plateAppearance.setMatchup(matchup);
+
+            plateAppearancesInInning.add(plateAppearance);
         }
 
         log.trace("Saving the last chunk of plate appearances");
