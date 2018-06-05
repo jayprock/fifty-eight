@@ -124,10 +124,14 @@ public class HitResultParser implements PlateAppearanceResultParser {
 
         log.trace("Determining RBIs");
         int runnersScored = StringUtils.countMatches(resultDescription, "Scores");
-        int noRbiCount = StringUtils.countMatches(resultDescription, "No RBI");
-        if (runnersScored > 0 && noRbiCount > 0) {
-            log.warn("Found runs scored that do not count as RBIs, removing them from the RBI count");
-            runnersScored = Math.max(runnersScored - noRbiCount, 0);
+        if (runnersScored > 0) {
+            int runsScoredDiscounted = Math.max(StringUtils.countMatches(resultDescription, "No RBI"),
+                    StringUtils.countMatches(resultDescription, "Scores/Adv on E"));
+            if (runsScoredDiscounted > 0) {
+                log.debug("Found runs scored that do not count as RBIs, removing them from the RBI count");
+                runnersScored = Math.max(runnersScored - runsScoredDiscounted, 0);
+            }
+
         }
         int runsBattedIn = (result == PlateAppearanceResult.HOMERUN) ? runnersScored + 1 : runnersScored;
         log.trace("RBIs: {}", runsBattedIn);
