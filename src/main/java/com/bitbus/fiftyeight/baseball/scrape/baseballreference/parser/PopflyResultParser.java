@@ -11,6 +11,7 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
 import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
+import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -52,13 +53,18 @@ public class PopflyResultParser implements PlateAppearanceResultParser {
         log.trace("Determining if the popfly included runs scored. This would be an unexpected situation");
         int runsScored = StringUtils.countMatches(resultDescription, "Scores");
         if (runsScored > 0) {
-            log.warn("Run(s) scored during a popfly. This is unexpected and potentially not handled. Review!");
+            log.debug("Run(s) scored during a popfly.");
             if (resultDescription.contains("Sacrifice Fly")) {
                 result = PlateAppearanceResult.SAC_FLY;
             }
             int runsScoredDiscounted = Math.max(StringUtils.countMatches(resultDescription, "No RBI"),
                     StringUtils.countMatches(resultDescription, "Scores/Adv on E"));
             rbis = Math.max(0, runsScored - runsScoredDiscounted);
+            if (rbis > 1) {
+                log.warn("More than 1 run scored during a Popfly. This is unexpected! Review result description [{}]",
+                        resultDescription);
+                throw new WarningScrapeException("More than 1 run scored on Popfly. Review: " + resultDescription);
+            }
         } else {
             log.trace("No runs were scored, this is the expected result");
         }
