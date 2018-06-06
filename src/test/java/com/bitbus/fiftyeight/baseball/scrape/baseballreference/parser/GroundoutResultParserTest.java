@@ -38,6 +38,8 @@ public class GroundoutResultParserTest {
                 "Groundout: SS-2B/Forceout at 2B; Bautista Scores; Donaldson Scores/unER/Adv on E4 (throw)/No RBI"));
         assertTrue(parser.isParserFor("Groundout: SS-2B/Forceout at 2B; DeJong Scores/unER; Fowler Scores/unER"));
         assertTrue(parser.isParserFor("Groundout: SS-2B/Forceout at 2B; Duvall Scores; Suarez Scores/Adv on E3"));
+        assertTrue(parser.isParserFor(
+                "Groundout: 1B-SS/Forceout at 2B (2B-1B); Phillips Scores; Flowers Scores/Safe on E1 (catch)/unER; Peterson to 1B"));
 
         assertFalse(parser.isParserFor("Ground Ball Double Play: Bunt 1B-2B-SS"));
         assertFalse(parser.isParserFor("Popfly: 3B"));
@@ -237,6 +239,16 @@ public class GroundoutResultParserTest {
         assertEquals(1, dto.getRunsBattedIn());
         assertEquals(HitType.GROUND_BALL, dto.getHitType());
         assertEquals(HitLocation.SHORT_STOP, dto.getHitLocation());
+
+        dto = parser.parse(
+                "Groundout: 1B-SS/Forceout at 2B (2B-1B); Phillips Scores; Flowers Scores/Safe on E1 (catch)/unER; Peterson to 1B");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(1, dto.getRunsBattedIn());
+        assertEquals(HitType.GROUND_BALL, dto.getHitType());
+        assertEquals(HitLocation.SECOND_BASE_FIRST_BASE, dto.getHitLocation());
     }
 
 }

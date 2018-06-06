@@ -68,8 +68,9 @@ public class GroundoutResultParser implements PlateAppearanceResultParser {
         int rbis = 0;
         int runsScored = StringUtils.countMatches(resultDescription, "Scores");
         if (runsScored > 0) {
-            int runsScoredNotRBIs = Math.max(StringUtils.countMatches(resultDescription, "No RBI"),
-                    StringUtils.countMatches(resultDescription, "Scores/Adv on E"));
+            int runsScoredNotRBIs = StringUtils.countMatches(resultDescription, "No RBI")
+                    + StringUtils.countMatches(resultDescription, "Scores/Adv on E")
+                    + StringUtils.countMatches(resultDescription, "Scores/Safe on E");
             rbis = Math.max(0, runsScored - runsScoredNotRBIs);
         }
         if (rbis > 1) {
