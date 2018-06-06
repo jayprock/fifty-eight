@@ -11,7 +11,6 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
 import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
-import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -55,7 +54,7 @@ public class FlyBallResultParser implements PlateAppearanceResultParser {
             if (resultDescription.contains("Sacrifice Fly")) {
                 qualifiedAB = false;
             } else {
-                log.warn("A run scored on a flyball [{}], but did not find \"Sacrifice Fly\", this is unusual",
+                log.debug("A run scored on a flyball [{}], but did not find \"Sacrifice Fly\", this is unusual",
                         resultDescription);
             }
             int runsScoreDiscounted = Math.max(StringUtils.countMatches(resultDescription, "No RBI"),
@@ -64,9 +63,6 @@ public class FlyBallResultParser implements PlateAppearanceResultParser {
             rbis = Math.max(0, runsScored - runsScoreDiscounted);
             if (rbis > 1) {
                 log.warn("Flyball scenario with {} RBIs. How is there more than 1 RBI?", runsScored);
-                throw new WarningScrapeException(
-                        "Flyball scenario with {} RBIs. Why are there more than 1 RBIs? Review description: "
-                                + resultDescription);
             }
         }
         PlateAppearanceResult result =

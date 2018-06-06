@@ -32,6 +32,7 @@ public class FlyBallResultParserTest {
                 parser.isParserFor("Double Play: Foul Flyball: LF (LF into Foul Terr.); Benintendi out at 2B/LF-2B"));
         assertTrue(parser.isParserFor("Flyball: RF-P/Forceout at 2B"));
         assertTrue(parser.isParserFor("Flyball: LF-2B/Forceout at 2B; Slater Scores"));
+        assertTrue(parser.isParserFor("Flyball: LF; Grichuk Scores/unER/Adv on E7 (throw)/No RBI"));
     }
 
     @Test
@@ -157,6 +158,15 @@ public class FlyBallResultParserTest {
         assertTrue(dto.isQualifiedAtBat());
         assertTrue(dto.isBallHitInPlay());
         assertEquals(1, dto.getRunsBattedIn());
+        assertEquals(HitType.FLYBALL, dto.getHitType());
+        assertEquals(HitLocation.LEFT_FIELD, dto.getHitLocation());
+
+        dto = parser.parse("Flyball: LF; Grichuk Scores/unER/Adv on E7 (throw)/No RBI");
+        assertEquals(PlateAppearanceResult.BALL_IN_PLAY_OUT, dto.getResult());
+        assertFalse(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(0, dto.getRunsBattedIn());
         assertEquals(HitType.FLYBALL, dto.getHitType());
         assertEquals(HitLocation.LEFT_FIELD, dto.getHitLocation());
     }
