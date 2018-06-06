@@ -58,7 +58,8 @@ public class FieldersChoiceResultParser implements PlateAppearanceResultParser {
         int rbis = 0;
         if (resultDescription.contains("Scores")) {
             int runsScored = StringUtils.countMatches(resultDescription, "Scores");
-            int runsScoredDiscounted = StringUtils.countMatches(resultDescription, "Scores/Adv on E");
+            int runsScoredDiscounted = StringUtils.countMatches(resultDescription, "Scores/Adv on E")
+                    + StringUtils.countMatches(resultDescription, "Scores/unER/Adv on E");
             rbis = Math.max(0, runsScored - runsScoredDiscounted);
             if (rbis > 1) {
                 log.warn("Fielder's Choice with {} run(s) scored. This is unusual. Review", runsScored);
