@@ -47,14 +47,14 @@ public class PopflyResultParser implements PlateAppearanceResultParser {
         }
         log.trace("Popfly location: {}", hitLocation);
 
-        boolean qualifiedAB = true;
+        PlateAppearanceResult result = PlateAppearanceResult.BALL_IN_PLAY_OUT;
         int rbis = 0;
         log.trace("Determining if the popfly included runs scored. This would be an unexpected situation");
         int runsScored = StringUtils.countMatches(resultDescription, "Scores");
         if (runsScored > 0) {
             log.warn("Run(s) scored during a popfly. This is unexpected and potentially not handled. Review!");
             if (resultDescription.contains("Sacrifice Fly")) {
-                qualifiedAB = false;
+                result = PlateAppearanceResult.SAC_FLY;
             }
             int runsScoredDiscounted = Math.max(StringUtils.countMatches(resultDescription, "No RBI"),
                     StringUtils.countMatches(resultDescription, "Scores/Adv on E"));
@@ -65,10 +65,10 @@ public class PopflyResultParser implements PlateAppearanceResultParser {
 
         log.trace("Successfully parsed the popfly result description");
         return PlateAppearanceResultDTO.builder() //
-                .result(PlateAppearanceResult.BALL_IN_PLAY_OUT) //
+                .result(result) //
                 .hitLocation(hitLocation) //
                 .hitType(HitType.POPFLY) //
-                .qualifiedAtBat(qualifiedAB) //
+                .qualifiedAtBat(result == PlateAppearanceResult.BALL_IN_PLAY_OUT) //
                 .ballHitInPlay(true) //
                 .runsBattedIn(rbis) //
                 .build();
