@@ -101,14 +101,24 @@ public class BaseballReferenceScraper {
         }
     }
 
-    /**
-     * @return tab handle for boxscore page
-     */
-    public String openPageWithBoxscores() {
+    public String getMainWindowHandle() {
+        return driver.getWindowHandle();
+    }
+
+    public void closeExtraWindowHandles(String mainWindowHandle) {
+        for (String windowHandle : driver.getWindowHandles()) {
+            if (!mainWindowHandle.equals(windowHandle)) {
+                driver.switchTo().window(windowHandle);
+                driver.close();
+            }
+        }
+        driver.switchTo().window(mainWindowHandle);
+    }
+
+    public void openPageWithBoxscores() {
         log.info("Opening the baseball reference page for the 2017 schedule.");
         driver.get(baseballProperties.getScheduleUrl2017());
         wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.className("game")));
-        return driver.getWindowHandle();
     }
 
     public List<WebElement> getDailyBoxscoreBlocks() {

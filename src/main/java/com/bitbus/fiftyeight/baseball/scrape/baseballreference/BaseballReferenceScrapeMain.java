@@ -44,9 +44,11 @@ public class BaseballReferenceScrapeMain {
         List<ScrapeResult> errorResults = new ArrayList<>();
         int seleniumErrorCount = 0;
         boolean done = false;
+        String mainWindowHandle = scraper.getMainWindowHandle();
         while (!done && seleniumErrorCount < 5) {
             try {
-                String mainTabHandle = scraper.openPageWithBoxscores();
+                scraper.closeExtraWindowHandles(mainWindowHandle);
+                scraper.openPageWithBoxscores();
                 log.info("Looking up the per day game blocks");
                 List<WebElement> dailyBoxscoreBlocks = scraper.getDailyBoxscoreBlocks();
                 for (WebElement dailyBoxscoreBlock : dailyBoxscoreBlocks) {
@@ -60,7 +62,7 @@ public class BaseballReferenceScrapeMain {
                             continue;
                         }
                         try {
-                            scraper.processBoxScore(boxscoreLink, mainTabHandle, matchupBaseballReferenceId);
+                            scraper.processBoxScore(boxscoreLink, mainWindowHandle, matchupBaseballReferenceId);
                         } catch (IllegalArgumentException | ScrapeException e) {
                             Result result;
                             if (e instanceof WarningScrapeException) {
