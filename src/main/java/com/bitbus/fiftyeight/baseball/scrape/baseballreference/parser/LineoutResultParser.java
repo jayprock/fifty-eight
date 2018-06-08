@@ -11,7 +11,6 @@ import com.bitbus.fiftyeight.baseball.player.plateappearance.HitType;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResult;
 import com.bitbus.fiftyeight.baseball.player.plateappearance.PlateAppearanceResultDTO;
 import com.bitbus.fiftyeight.common.scrape.ex.ScrapeException;
-import com.bitbus.fiftyeight.common.scrape.ex.WarningScrapeException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -62,9 +61,7 @@ public class LineoutResultParser implements PlateAppearanceResultParser {
                 result = PlateAppearanceResult.SAC_FLY;
             } else {
                 log.warn("A run scored on a lineout, but did not find \"Sacrifice Fly\", is something wrong?");
-                throw new WarningScrapeException(
-                        "A run scored on a lineout, but did not find \"Sacrifice Fly\", is something wrong? Review description: "
-                                + resultDescription);
+                result = PlateAppearanceResult.BALL_IN_PLAY_OUT;
             }
             int runsScoredNotRBIs = Math.max(StringUtils.countMatches(resultDescription, "No RBI"),
                     StringUtils.countMatches(resultDescription, "Scores/Adv on E"));
