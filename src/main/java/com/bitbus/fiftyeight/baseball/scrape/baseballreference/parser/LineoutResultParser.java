@@ -64,7 +64,8 @@ public class LineoutResultParser implements PlateAppearanceResultParser {
                 result = PlateAppearanceResult.BALL_IN_PLAY_OUT;
             }
             int runsScoredNotRBIs = Math.max(StringUtils.countMatches(resultDescription, "No RBI"),
-                    StringUtils.countMatches(resultDescription, "Scores/Adv on E"));
+                    StringUtils.countMatches(resultDescription, "Scores/Adv on E")
+                            + StringUtils.countMatches(resultDescription, "Scores/unER/Adv on E"));
             rbis = Math.max(0, runsScored - runsScoredNotRBIs);
             if (runsScored > 1) {
                 log.debug(
