@@ -63,6 +63,8 @@ public class HitResultParserTest {
                 "Single to RF (Line Drive); Zimmer Scores/unER; Brantley Scores/Adv on E9 (throw)/unER/No RBI; Ramirez to 3B/Adv on throw"));
         assertTrue(parser.isParserFor("Double to LF/Fan Interference (Ground Ball)"));
         assertTrue(parser.isParserFor("Double to RF/Fan Interference; Urshela Scores"));
+        assertTrue(parser.isParserFor(
+                "Double Play: Single to RF (Line Drive to Short RF Line); Merrifield out at Hm/RF-C; Cain out at 2B/C-2B-SS"));
     }
 
     @Test
@@ -194,6 +196,15 @@ public class HitResultParserTest {
         assertEquals(HitLocation.SECOND_BASE, dto.getHitLocation());
         assertEquals(0, dto.getRunsBattedIn());
 
+        dto = parser.parse(
+                "Double Play: Single to RF (Line Drive to Short RF Line); Merrifield out at Hm/RF-C; Cain out at 2B/C-2B-SS");
+        assertTrue(dto.isHit());
+        assertTrue(dto.isQualifiedAtBat());
+        assertTrue(dto.isBallHitInPlay());
+        assertEquals(PlateAppearanceResult.SINGLE, dto.getResult());
+        assertEquals(HitType.LINE_DRIVE, dto.getHitType());
+        assertEquals(HitLocation.SHORT_RIGHT_FIELD_LINE, dto.getHitLocation());
+        assertEquals(0, dto.getRunsBattedIn());
     }
 
     @Test

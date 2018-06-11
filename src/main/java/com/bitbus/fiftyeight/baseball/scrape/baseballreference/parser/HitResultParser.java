@@ -30,6 +30,7 @@ public class HitResultParser implements PlateAppearanceResultParser {
         startingWords.add("Double/Fan");
         startingWords.add("Inside-the-park Home Run");
         startingWords.add("Double (");
+        startingWords.add("Double Play: Single");
     }
 
     @Override
@@ -56,6 +57,8 @@ public class HitResultParser implements PlateAppearanceResultParser {
         } else if (resultDescription.startsWith(startingWords.get(3))
                 || resultDescription.startsWith(startingWords.get(6))) {
             result = PlateAppearanceResult.HOMERUN;
+        } else if (resultDescription.startsWith(startingWords.get(8))) {
+            result = PlateAppearanceResult.SINGLE;
         } else {
             throw new ScrapeException("The result description [" + resultDescription
                     + "] is not a hit and should not be parsed by the HitResultParser");
